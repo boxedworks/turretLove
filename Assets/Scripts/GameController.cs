@@ -16,13 +16,11 @@ namespace Assets.Scripts
       s_Singleton = this;
 
       new CommonResources();
-      new InputController();
     }
 
     // Update is called once per frame
     void Update()
     {
-      InputController.s_Singleton.Update();
     }
   }
 

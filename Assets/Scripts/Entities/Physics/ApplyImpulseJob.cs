@@ -2,7 +2,6 @@ using Assets.Scripts.Input;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Extensions;
@@ -18,24 +17,25 @@ namespace Assets.Scripts.Entities.Physics
   public partial struct ApplyImpulseSystem : ISystem
   {
 
-    EntityQuery m_PhysicsQuery;
+    EntityQuery _physicsQuery;
 
     public void OnCreate(ref SystemState state)
     {
-      m_PhysicsQuery = new EntityQueryBuilder(Allocator.Temp)
+      _physicsQuery = new EntityQueryBuilder(Allocator.Temp)
         .WithAll<CubeTest>()
         .Build(ref state);
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
       state.CompleteDependency();
 
+      // Gather input state
+      var inputState = SystemAPI.GetSingleton<InputState>();
+
       // Iterate through all entities with physics components
-      var entities = m_PhysicsQuery.ToEntityArray(Allocator.Temp);
-      var mousePosition = InputController.s_MouseWorldPosition;
-      var isMouse1Down = InputController.s_IsMouse1Down;
+      var entities = _physicsQuery.ToEntityArray(Allocator.Temp);
       foreach (var entity in entities)
       {
         var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(entity);
@@ -43,14 +43,14 @@ namespace Assets.Scripts.Entities.Physics
         var transform = SystemAPI.GetComponentRW<LocalTransform>(entity);
 
         // Apply an impulse to the entity's velocity
-        if (isMouse1Down)
+        if (inputState.Mouse1Down)
         {
           var position = transform.ValueRO.Position;
-          var dir = new float3(mousePosition.x, mousePosition.y, position.z) - position;
+          var dir = inputState.MouseWorldPosition - position;
           dir.z = 0f;
           var force = math.clamp(math.length(dir), 0f, 1f) * 0.25f;
           var impulse = math.normalize(dir) * force;
-          velocity.ValueRW.ApplyLinearImpulse(mass.ValueRO, impulse);
+          velocity.ValueRW.Linear += impulse / mass.ValueRO.InverseMass;
         }
 
         transform.ValueRW.Position.z = 0f;

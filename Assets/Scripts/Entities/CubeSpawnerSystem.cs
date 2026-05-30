@@ -1,4 +1,5 @@
 
+using Assets.Scripts.Entities.Player.Turret;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -22,18 +23,18 @@ namespace Assets.Scripts.Entities
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-      CubeSpawner spawner = SystemAPI.GetSingleton<CubeSpawner>();
-
-      if (_spawnedAmount < 100)
+      if (_spawnedAmount < 50)
       {
         _spawnedAmount++;
 
+        var spawner = SystemAPI.GetSingleton<CubeSpawner>();
         var newEntity = state.EntityManager.Instantiate(spawner.Prefab);
 
-        float3 randomPosition = new float3(_random.NextFloat(-4f, 4f), _random.NextFloat(-4f, 4f), 0);
+        var randomPosition = new float3(_random.NextFloat(-4f, 4f), _random.NextFloat(-4f, 4f), 0);
         state.EntityManager.SetComponentData(newEntity, LocalTransform.FromPosition(randomPosition));
 
         state.EntityManager.AddComponent<CubeTest>(newEntity);
+        state.EntityManager.AddBuffer<BulletCollisionEvent>(newEntity);
       }
     }
   }
