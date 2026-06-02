@@ -1,5 +1,5 @@
 
-using Assets.Scripts.Entities.Game;
+using Assets.Scripts.Entities.Game.Audio;
 using Assets.Scripts.Entities.Player.Turret;
 using Unity.Burst;
 using Unity.Entities;

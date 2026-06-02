@@ -1,48 +1,95 @@
 
+using Assets.Scripts.Entities.Game.Audio;
 using Assets.Scripts.Input;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace Assets.Scripts.Entities.Player.Turret
 {
+
   public partial struct TurretSystem : ISystem
   {
 
+    //
     [BurstCompile]
-    partial struct TurretLookJob : IJobEntity
+    partial struct TurretUpdateJob : IJobEntity
     {
 
       public float3 TargetLookPosition;
-      public float Speed;
+      public double CurrentTime;
       public float DeltaTime;
+      public NativeList<BulletSpawnEvent> BulletSpawnEvents;
 
-      public readonly void Execute(in TurretTop turretTop, ref LocalTransform localTransform)
+      public DynamicBuffer<AudioEvent> AudioEventBuffer;
+
+
+      public readonly void Execute(ref TurretTop turretTop, ref LocalTransform localTransform)
+      {
+        RotateTurret(turretTop, ref localTransform);
+        HandleBullet(ref turretTop, localTransform);
+      }
+
+      readonly void RotateTurret(in TurretTop turretTop, ref LocalTransform localTransform)
       {
         var directionToTarget = TargetLookPosition - localTransform.Position;
-        var angle = math.atan2(directionToTarget.y, directionToTarget.x) + math.radians(-90f);
-        var targetRotation = quaternion.RotateZ(angle);
+        var targetAngle = math.atan2(directionToTarget.y, directionToTarget.x) + math.radians(-90f);
+        var currentAngle = 2f * math.atan2(localTransform.Rotation.value.z, localTransform.Rotation.value.w);
 
-        // Rotate in a constant rate unless we're very close to the target rotation, in which case just snap to it to avoid jittering
-        if (math.abs(math.angle(targetRotation, localTransform.Rotation)) < 0.01f)
-          localTransform.Rotation = targetRotation;
+        // Shortest signed angular delta, wrapped to [-PI, PI]
+        var deltaAngle = math.atan2(math.sin(targetAngle - currentAngle), math.cos(targetAngle - currentAngle));
+
+        if (math.abs(deltaAngle) < 0.01f)
+          localTransform.Rotation = quaternion.RotateZ(targetAngle);
         else
-          localTransform.Rotation = math.slerp(localTransform.Rotation, targetRotation, Speed * DeltaTime);
+        {
+          var rotationSpeed = turretTop.RotationSpeed * DeltaTime;
+          localTransform.Rotation = quaternion.RotateZ(currentAngle + math.clamp(deltaAngle, -rotationSpeed, rotationSpeed));
+        }
+      }
+
+      readonly void HandleBullet(ref TurretTop turretTop, in LocalTransform localTransform)
+      {
+        if (CurrentTime - turretTop.LastShotTime < turretTop.FireRate)
+          return;
+        turretTop.LastShotTime = CurrentTime;
+
+        BulletSpawnEvents.Add(new BulletSpawnEvent
+        {
+          SpawnPosition = localTransform.Position,
+          SpawnRotation = localTransform.Rotation,
+        });
+
+        // Add audio event for enemy death
+        AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDeath });
       }
     }
 
     [BurstCompile]
-    public readonly void OnUpdate(ref SystemState state)
+    public void OnUpdate(ref SystemState state)
     {
-      var inputData = SystemAPI.GetSingleton<InputState>();
+      state.CompleteDependency();
 
-      new TurretLookJob
+      var inputData = SystemAPI.GetSingleton<InputState>();
+      var spawnEvents = new NativeList<BulletSpawnEvent>(Allocator.TempJob);
+
+      new TurretUpdateJob
       {
         TargetLookPosition = inputData.MouseWorldPosition,
-        Speed = 1f,
-        DeltaTime = SystemAPI.Time.DeltaTime
-      }.ScheduleParallel();
+        CurrentTime = SystemAPI.Time.ElapsedTime,
+        DeltaTime = SystemAPI.Time.DeltaTime,
+        BulletSpawnEvents = spawnEvents,
+
+        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>()
+      }.Run();
+
+      var buffer = SystemAPI.GetSingletonBuffer<BulletSpawnEvent>();
+      foreach (var e in spawnEvents)
+        buffer.Add(e);
+
+      spawnEvents.Dispose();
     }
 
   }

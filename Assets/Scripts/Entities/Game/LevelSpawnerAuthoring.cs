@@ -18,8 +18,6 @@ namespace Assets.Scripts.Entities.Game
         Border0Prefab = GetEntity(authoring.Border0Prefab, TransformUsageFlags.None),
         Border1Prefab = GetEntity(authoring.Border1Prefab, TransformUsageFlags.None)
       };
-      AddComponent(levelSpawner.Border0Prefab, new LevelBorder());
-      AddComponent(levelSpawner.Border1Prefab, new LevelBorder());
 
       AddComponent(entity, levelSpawner);
     }
@@ -31,7 +29,4 @@ namespace Assets.Scripts.Entities.Game
     public Entity Border0Prefab;
     public Entity Border1Prefab;
   }
-
-  public struct LevelBorder : IComponentData
-  { }
 }

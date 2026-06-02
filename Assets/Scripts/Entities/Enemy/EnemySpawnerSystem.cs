@@ -55,8 +55,8 @@ namespace Assets.Scripts.Entities.Enemy
       var physicsCollider = SystemAPI.GetComponentRW<Unity.Physics.PhysicsCollider>(enemy);
       var collider = physicsCollider.ValueRO.Value;
       var filter = collider.Value.GetCollisionFilter();
-      filter.BelongsTo = 1 << 1;
-      filter.CollidesWith = (1 << 0) | (1 << 1);
+      filter.BelongsTo = 1 << 4;
+      filter.CollidesWith = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4);
       collider.Value.SetCollisionFilter(filter);
       physicsCollider.ValueRW.Value = collider;
     }

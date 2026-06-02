@@ -9,40 +9,51 @@ namespace Assets.Scripts.Entities.Player.Turret
 
   public partial struct BulletSpawnerSystem : ISystem
   {
-
-    double _lastSpawnTime;
-
     public readonly void OnCreate(ref SystemState state)
     {
+      state.RequireForUpdate<BulletSpawner>();
+
+      var spawnerEntity = state.EntityManager.CreateEntity();
+      state.EntityManager.AddBuffer<BulletSpawnEvent>(spawnerEntity);
     }
 
     public void OnUpdate(ref SystemState state)
     {
-      var time = SystemAPI.Time.ElapsedTime;
-      if (time - _lastSpawnTime < 0.25f)
-        return;
-      _lastSpawnTime = time;
-
       var bulletSpawner = SystemAPI.GetSingleton<BulletSpawner>();
 
-      var bulletEntity = state.EntityManager.Instantiate(bulletSpawner.Prefab);
-      state.EntityManager.AddComponent<Bullet>(bulletEntity);
-      state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPosition(float3.zero));
+      var bulletSpawnEventBuffer = SystemAPI.GetSingletonBuffer<BulletSpawnEvent>();
+      if (bulletSpawnEventBuffer.Length == 0)
+        return;
 
-      // For testing, set random rotation and velocity
-      var random = new Random((uint)System.DateTime.Now.Ticks);
-      var spawnPosition = float3.zero;
-      var rotation = quaternion.EulerXYZ(0, 0, random.NextFloat(0, math.PI * 2));
-      var scale = 0.25f;
+      var events = bulletSpawnEventBuffer.ToNativeArray(Unity.Collections.Allocator.Temp);
+      bulletSpawnEventBuffer.Clear();
 
-      // Set position, rotation and scale
-      state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPositionRotationScale(spawnPosition, rotation, scale));
+      foreach (var spawnEvent in events)
+      {
+        var bulletEntity = state.EntityManager.Instantiate(bulletSpawner.Prefab);
+        state.EntityManager.AddComponent<Bullet>(bulletEntity);
+        state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPosition(float3.zero));
 
-      var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(bulletEntity);
-      var force = 5f;
-      velocity.ValueRW.Linear = math.mul(rotation, new float3(0, 1f, 0)) * force;
+        // For testing, set random rotation and velocity
+        var spawnPosition = spawnEvent.SpawnPosition;
+        var rotation = spawnEvent.SpawnRotation;
+        var scale = 0.25f;
+
+        // Set position, rotation and scale
+        state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPositionRotationScale(spawnPosition, rotation, scale));
+
+        var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(bulletEntity);
+        var force = 5f;
+        velocity.ValueRW.Linear = math.mul(rotation, new float3(0, 1f, 0)) * force;
+      }
+      events.Dispose();
     }
+  }
 
+  public partial struct BulletSpawnEvent : IBufferElementData
+  {
+    public float3 SpawnPosition;
+    public quaternion SpawnRotation;
   }
 
   public partial struct Bullet : IComponentData

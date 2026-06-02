@@ -43,9 +43,9 @@ namespace Assets.Scripts.Entities.Player.Turret
         if (!isBulletCollision)
           return;
 
-        var isEnemyCollision = EnemyLookup.HasComponent(entityA) || EnemyLookup.HasComponent(entityB);
-        if (!isEnemyCollision)
-          return;
+        // var isEnemyCollision = EnemyLookup.HasComponent(entityA) || EnemyLookup.HasComponent(entityB);
+        // if (!isEnemyCollision)
+        //   return;
 
         var isTurretCollision = TurretTopLookup.HasComponent(entityA) || TurretTopLookup.HasComponent(entityB);
         if (isTurretCollision)
