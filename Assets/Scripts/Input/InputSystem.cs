@@ -8,13 +8,13 @@ namespace Assets.Scripts.Input
   public partial struct InputSystem : ISystem
   {
 
-    public void OnCreate(ref SystemState state)
+    public readonly void OnCreate(ref SystemState state)
     {
       var inputEntity = state.EntityManager.CreateEntity();
       state.EntityManager.AddComponent<InputState>(inputEntity);
     }
 
-    public void OnUpdate(ref SystemState state)
+    public readonly void OnUpdate(ref SystemState state)
     {
       var inputState = SystemAPI.GetSingletonRW<InputState>();
 

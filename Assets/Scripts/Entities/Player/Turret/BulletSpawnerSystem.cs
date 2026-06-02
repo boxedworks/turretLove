@@ -12,7 +12,7 @@ namespace Assets.Scripts.Entities.Player.Turret
 
     double _lastSpawnTime;
 
-    public void OnCreate(ref SystemState state)
+    public readonly void OnCreate(ref SystemState state)
     {
     }
 
@@ -31,8 +31,12 @@ namespace Assets.Scripts.Entities.Player.Turret
 
       // For testing, set random rotation and velocity
       var random = new Random((uint)System.DateTime.Now.Ticks);
+      var spawnPosition = float3.zero;
       var rotation = quaternion.EulerXYZ(0, 0, random.NextFloat(0, math.PI * 2));
-      state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromRotation(rotation));
+      var scale = 0.25f;
+
+      // Set position, rotation and scale
+      state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPositionRotationScale(spawnPosition, rotation, scale));
 
       var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(bulletEntity);
       var force = 5f;

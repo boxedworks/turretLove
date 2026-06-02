@@ -1,4 +1,5 @@
 
+using Assets.Scripts.Entities.Enemy;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -22,6 +23,8 @@ namespace Assets.Scripts.Entities.Player.Turret
 
       [ReadOnly] public ComponentLookup<LocalTransform> LocalTransformLookup;
       [ReadOnly] public ComponentLookup<Bullet> BulletLookup;
+      [ReadOnly] public ComponentLookup<SimpleEnemy> EnemyLookup;
+      [ReadOnly] public ComponentLookup<TurretTop> TurretTopLookup;
       public BufferLookup<BulletCollisionEvent> BulletCollisionEventLookup;
 
       // Check if either entity in the trigger event is a bullet, and if so, handle the collision accordingly
@@ -38,6 +41,14 @@ namespace Assets.Scripts.Entities.Player.Turret
 
         var isBulletCollision = isEntityABullet || isEntityBBullet;
         if (!isBulletCollision)
+          return;
+
+        var isEnemyCollision = EnemyLookup.HasComponent(entityA) || EnemyLookup.HasComponent(entityB);
+        if (!isEnemyCollision)
+          return;
+
+        var isTurretCollision = TurretTopLookup.HasComponent(entityA) || TurretTopLookup.HasComponent(entityB);
+        if (isTurretCollision)
           return;
 
         // Destroy any bullet that collides with something
@@ -83,6 +94,9 @@ namespace Assets.Scripts.Entities.Player.Turret
 
           LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
           BulletLookup = SystemAPI.GetComponentLookup<Bullet>(true),
+          EnemyLookup = SystemAPI.GetComponentLookup<SimpleEnemy>(true),
+          TurretTopLookup = SystemAPI.GetComponentLookup<TurretTop>(true),
+
           BulletCollisionEventLookup = SystemAPI.GetBufferLookup<BulletCollisionEvent>(),
         }
         .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);

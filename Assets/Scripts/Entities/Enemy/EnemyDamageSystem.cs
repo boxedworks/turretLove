@@ -1,7 +1,7 @@
 
+using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Player.Turret;
 using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -12,43 +12,48 @@ namespace Assets.Scripts.Entities.Enemy
 {
   public partial struct EnemyDamageSystem : ISystem
   {
-
-    EntityQuery _enemyQuery;
-    public void OnCreate(ref SystemState state)
-    {
-      _enemyQuery = new EntityQueryBuilder(Allocator.Temp)
-        .WithAll<BulletCollisionEvent>()
-        .Build(ref state);
-    }
-
     [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    partial struct EnemyDamageJob : IJobEntity
     {
-      state.CompleteDependency();
+      public EntityCommandBuffer Ecb;
+      public DynamicBuffer<AudioEvent> AudioEventBuffer;
 
-      var entities = _enemyQuery.ToEntityArray(Allocator.Temp);
-      foreach (var entity in entities)
+      public readonly void Execute(Entity entity, ref DynamicBuffer<BulletCollisionEvent> collisionBuffer, ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform)
       {
-        var collisionBuffer = SystemAPI.GetBuffer<BulletCollisionEvent>(entity);
-
         if (collisionBuffer.Length > 0)
         {
           // Handle collision events
           foreach (var collisionEvent in collisionBuffer)
           {
-            var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(entity);
-            var physicsMass = SystemAPI.GetComponentRW<PhysicsMass>(entity);
-            var position = SystemAPI.GetComponentRW<LocalTransform>(entity).ValueRO.Position;
+            var position = transform.Position;
             var bulletPosition = collisionEvent.BulletPosition;
             var dir = position - bulletPosition;
             dir.z = 0f;
             var force = 5f;
-            velocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, math.normalize(dir) * force);
+            velocity.ApplyLinearImpulse(mass, math.normalize(dir) * force);
           }
           collisionBuffer.Clear();
+
+          // Destroy entity using ecb
+          Ecb.DestroyEntity(entity);
+
+          // Add audio event for enemy death
+          AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDeath });
         }
       }
-      entities.Dispose();
+    }
+
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+      var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
+      var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+      state.Dependency = new EnemyDamageJob()
+      {
+        Ecb = ecb,
+        AudioEventBuffer = SystemAPI.GetBuffer<AudioEvent>(SystemAPI.GetSingletonEntity<AudioEvent>())
+      }
+        .Schedule(state.Dependency);
     }
   }
 }

@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Input;
 using Unity.Burst;
 using Unity.Collections;
@@ -22,8 +23,31 @@ namespace Assets.Scripts.Entities.Physics
     public void OnCreate(ref SystemState state)
     {
       _physicsQuery = new EntityQueryBuilder(Allocator.Temp)
-        .WithAll<CubeTest>()
+        .WithAll<SimpleEnemy>()
         .Build(ref state);
+    }
+
+    [BurstCompile]
+    partial struct ApplyImpulseJob : IJobEntity
+    {
+      public InputState InputState;
+
+      public readonly void Execute(in SimpleEnemy enemy, ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform)
+      {
+        if (InputState.Mouse1Down)
+        {
+          var position = transform.Position;
+          var dir = InputState.MouseWorldPosition - position;
+          dir.z = 0f;
+          var force = math.clamp(math.length(dir), 0f, 1f) * 0.25f;
+          var impulse = math.normalize(dir) * force;
+          velocity.Linear += impulse / mass.InverseMass;
+        }
+
+        // Constrain movement to the XY plane
+        velocity.Linear.z = 0f;
+        mass.InverseInertia = float3.zero;
+      }
     }
 
     [BurstCompile]
@@ -34,33 +58,13 @@ namespace Assets.Scripts.Entities.Physics
       // Gather input state
       var inputState = SystemAPI.GetSingleton<InputState>();
 
-      // Iterate through all entities with physics components
-      var entities = _physicsQuery.ToEntityArray(Allocator.Temp);
-      foreach (var entity in entities)
+      // Schedule the job to apply impulses based on input
+      state.Dependency = new ApplyImpulseJob
       {
-        var velocity = SystemAPI.GetComponentRW<PhysicsVelocity>(entity);
-        var mass = SystemAPI.GetComponentRW<PhysicsMass>(entity);
-        var transform = SystemAPI.GetComponentRW<LocalTransform>(entity);
-
-        // Apply an impulse to the entity's velocity
-        if (inputState.Mouse1Down)
-        {
-          var position = transform.ValueRO.Position;
-          var dir = inputState.MouseWorldPosition - position;
-          dir.z = 0f;
-          var force = math.clamp(math.length(dir), 0f, 1f) * 0.25f;
-          var impulse = math.normalize(dir) * force;
-          velocity.ValueRW.Linear += impulse / mass.ValueRO.InverseMass;
-        }
-
-        transform.ValueRW.Position.z = 0f;
-        velocity.ValueRW.Linear.z = 0f;
-        mass.ValueRW.InverseInertia.x = 0f;
-        mass.ValueRW.InverseInertia.y = 0f;
+        InputState = inputState
       }
-      entities.Dispose();
+        .ScheduleParallel(state.Dependency);
     }
   }
-
 
 }
