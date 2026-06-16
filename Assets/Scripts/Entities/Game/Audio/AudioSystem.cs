@@ -28,10 +28,12 @@ namespace Assets.Scripts.Entities.Game.Audio
       _audioSourcePool = new();
       _activeAudioSources = new();
 
+      var audioContainer = new GameObject("AudioContainer");
       for (var i = 0; i < 10; i++)
       {
         var audioSource = new GameObject("AudioSource").AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
+        audioSource.transform.parent = audioContainer.transform;
         _audioSourcePool.Enqueue(new CustomAudioSource { Source = audioSource });
       }
 

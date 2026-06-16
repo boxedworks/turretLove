@@ -1,38 +1,31 @@
 
 using Assets.Scripts.Entities.Game.Audio;
-using Assets.Scripts.Entities.Player.Turret;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
-using Unity.Physics.Extensions;
 using Unity.Transforms;
 
-namespace Assets.Scripts.Entities.Enemy
+namespace Assets.Scripts.Entities.Game
 {
-  public partial struct EnemyDamageSystem : ISystem
+  public partial struct DamageSystem : ISystem
   {
     [BurstCompile]
-    partial struct EnemyDamageJob : IJobEntity
+    partial struct DamageJob : IJobEntity
     {
       public EntityCommandBuffer Ecb;
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
 
-      public readonly void Execute(Entity entity, ref DynamicBuffer<BulletCollisionEvent> collisionBuffer, ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform)
+      public readonly void Execute(Entity entity, ref DynamicBuffer<DamageEvent> damageBuffer, ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform)
       {
-        if (collisionBuffer.Length > 0)
+        if (damageBuffer.Length > 0)
         {
           // Handle collision events
-          foreach (var collisionEvent in collisionBuffer)
+          foreach (var damageEvent in damageBuffer)
           {
-            var position = transform.Position;
-            var bulletPosition = collisionEvent.BulletPosition;
-            var dir = position - bulletPosition;
-            dir.z = 0f;
-            var force = 5f;
-            velocity.ApplyLinearImpulse(mass, math.normalize(dir) * force);
+
           }
-          collisionBuffer.Clear();
+          damageBuffer.Clear();
 
           // Destroy entity using ecb
           Ecb.DestroyEntity(entity);
@@ -48,12 +41,17 @@ namespace Assets.Scripts.Entities.Enemy
     {
       var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
       var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
-      state.Dependency = new EnemyDamageJob()
+      state.Dependency = new DamageJob()
       {
         Ecb = ecb,
         AudioEventBuffer = SystemAPI.GetBuffer<AudioEvent>(SystemAPI.GetSingletonEntity<AudioEvent>())
       }
         .Schedule(state.Dependency);
     }
+  }
+
+  public partial struct DamageEvent : IBufferElementData
+  {
+    public float3 BulletPosition;
   }
 }

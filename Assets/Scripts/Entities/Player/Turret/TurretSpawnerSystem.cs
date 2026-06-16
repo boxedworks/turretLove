@@ -32,10 +32,12 @@ namespace Assets.Scripts.Entities.Player.Turret
       var turretTopInstance = state.EntityManager.Instantiate(turretSpawner.TurretTopPrefab);
       var turretBaseInstance = state.EntityManager.Instantiate(turretSpawner.TurretBasePrefab);
 
-      state.EntityManager.AddComponentData(turretTopInstance, new TurretTop()
+      state.EntityManager.AddComponent<TurretTop>(turretTopInstance);
+      state.EntityManager.AddComponentData(turretTopInstance, new TurretAttributes
       {
         RotationSpeed = 1f,
         FireRate = 0.5f,
+        TimeSinceLastShot = 0f
       });
       state.EntityManager.AddComponent<TurretBase>(turretBaseInstance);
 
@@ -57,9 +59,6 @@ namespace Assets.Scripts.Entities.Player.Turret
 
   public partial struct TurretTop : IComponentData
   {
-    public float RotationSpeed;
-    public double LastShotTime;
-    public float FireRate;
   }
   public partial struct TurretBase : IComponentData
   {

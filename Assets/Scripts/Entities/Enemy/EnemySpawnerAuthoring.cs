@@ -7,6 +7,7 @@ namespace Assets.Scripts.Entities.Enemy
   public class EnemySpawnerAuthoring : MonoBehaviour
   {
     public float SpawnInterval = 1f;
+
     public GameObject GoblinPrefab;
   }
 

@@ -1,4 +1,5 @@
 
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -17,6 +18,7 @@ namespace Assets.Scripts.Entities.Player.Turret
       state.EntityManager.AddBuffer<BulletSpawnEvent>(spawnerEntity);
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
       var bulletSpawner = SystemAPI.GetSingleton<BulletSpawner>();
@@ -58,9 +60,5 @@ namespace Assets.Scripts.Entities.Player.Turret
 
   public partial struct Bullet : IComponentData
   {
-  }
-  public partial struct BulletCollisionEvent : IBufferElementData
-  {
-    public float3 BulletPosition;
   }
 }

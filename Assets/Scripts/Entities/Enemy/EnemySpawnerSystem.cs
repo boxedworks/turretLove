@@ -2,20 +2,26 @@
 using Assets.Scripts.Entities.Player.Turret;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using Unity.Transforms;
+using Assets.Scripts.Entities.Game;
+using Unity.Burst;
 
 namespace Assets.Scripts.Entities.Enemy
 {
   public partial struct EnemySpawnerSystem : ISystem
   {
     private double _lastSpawnTime;
+    private Random _random;
     public void OnCreate(ref SystemState state)
     {
       state.RequireForUpdate<EnemySpawner>();
 
       _lastSpawnTime = 0.0;
+      _random = new Random((uint)System.DateTime.Now.Ticks);
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
       var time = SystemAPI.Time.ElapsedTime;
@@ -26,7 +32,7 @@ namespace Assets.Scripts.Entities.Enemy
       var enemySpawner = SystemAPI.GetSingleton<EnemySpawner>();
       var enemy = state.EntityManager.Instantiate(enemySpawner.GoblinPrefab);
       state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = 1f, Speed = 1f });
-      state.EntityManager.AddBuffer<BulletCollisionEvent>(enemy);
+      state.EntityManager.AddBuffer<DamageEvent>(enemy);
 
       // Spawn enemies arounnd the center of the map using 4 borders
       var random = new Random((uint)System.DateTime.Now.Ticks);
@@ -59,6 +65,16 @@ namespace Assets.Scripts.Entities.Enemy
       filter.CollidesWith = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4);
       collider.Value.SetCollisionFilter(filter);
       physicsCollider.ValueRW.Value = collider;
+
+      // Add material override
+      state.EntityManager.AddComponentData(enemy, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
+    }
+
+    //
+    [MaterialProperty("_Color")]
+    public struct ColorOverride : IComponentData
+    {
+      public float4 Value;
     }
   }
 }

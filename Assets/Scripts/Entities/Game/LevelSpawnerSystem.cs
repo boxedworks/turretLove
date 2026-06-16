@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Entities;
 
 namespace Assets.Scripts.Entities.Game
@@ -9,6 +10,7 @@ namespace Assets.Scripts.Entities.Game
       state.RequireForUpdate<LevelSpawner>();
     }
 
+    [BurstCompile]
     public readonly void OnUpdate(ref SystemState state)
     {
       state.Enabled = false;

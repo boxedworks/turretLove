@@ -1,10 +1,12 @@
 
 using Assets.Scripts.Entities.Enemy;
+using Assets.Scripts.Entities.Game;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Physics.Extensions;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 
@@ -25,7 +27,8 @@ namespace Assets.Scripts.Entities.Player.Turret
       [ReadOnly] public ComponentLookup<Bullet> BulletLookup;
       [ReadOnly] public ComponentLookup<SimpleEnemy> EnemyLookup;
       [ReadOnly] public ComponentLookup<TurretTop> TurretTopLookup;
-      public BufferLookup<BulletCollisionEvent> BulletCollisionEventLookup;
+      public BufferLookup<DamageEvent> DamageEventLookup;
+      public BufferLookup<KnockbackEvent> KnockbackEventLookup;
 
       // Check if either entity in the trigger event is a bullet, and if so, handle the collision accordingly
       // If bullet collides with something, destroy the bullet and add a collision event to the other entity
@@ -53,14 +56,14 @@ namespace Assets.Scripts.Entities.Player.Turret
 
         // Destroy any bullet that collides with something
         if (isEntityABullet)
-          HandleCollisionAsBullet(triggerEvent.BodyIndexA, triggerEvent.EntityA);
+          HandleCollisionAsBullet(triggerEvent.BodyIndexA, entityA);
         else
-          HandleCollisionAsNonBullet(triggerEvent.BodyIndexA, triggerEvent.EntityA, LocalTransformLookup[entityB].Position);
+          HandleCollisionAsNonBullet(triggerEvent.BodyIndexA, entityA, LocalTransformLookup[entityB].Position, LocalTransformLookup[entityA]);
 
         if (isEntityBBullet)
-          HandleCollisionAsBullet(triggerEvent.BodyIndexB, triggerEvent.EntityB);
+          HandleCollisionAsBullet(triggerEvent.BodyIndexB, entityB);
         else
-          HandleCollisionAsNonBullet(triggerEvent.BodyIndexB, triggerEvent.EntityB, LocalTransformLookup[entityA].Position);
+          HandleCollisionAsNonBullet(triggerEvent.BodyIndexB, entityB, LocalTransformLookup[entityA].Position, LocalTransformLookup[entityB]);
       }
 
       // If a bullet collides with something, destroy the bullet
@@ -70,19 +73,28 @@ namespace Assets.Scripts.Entities.Player.Turret
       }
 
       // If a bullet collides with a non-bullet entity, add a collision event to that entity's buffer
-      void HandleCollisionAsNonBullet(int entityIndex, Entity nonBulletEntity, float3 bulletPosition)
+      void HandleCollisionAsNonBullet(int entityIndex, Entity nonBulletEntity, float3 bulletPosition, LocalTransform transform)
       {
-        if (!BulletCollisionEventLookup.HasBuffer(nonBulletEntity))
+        if (!DamageEventLookup.HasBuffer(nonBulletEntity))
           return;
-        var buffer = BulletCollisionEventLookup[nonBulletEntity];
-        buffer.Add(new BulletCollisionEvent()
+        var damageEventBuffer = DamageEventLookup[nonBulletEntity];
+        damageEventBuffer.Add(new DamageEvent()
         {
           BulletPosition = bulletPosition
+        });
+
+        // Apply a knockback force to the entity based on the direction from the bullet to the entity
+        var knockbackEventBuffer = KnockbackEventLookup[nonBulletEntity];
+        knockbackEventBuffer.Add(new KnockbackEvent()
+        {
+          Direction = math.normalize(transform.Position - bulletPosition),
+          Force = 5f
         });
       }
     }
 
     // Gather trigger events and schedule the job
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
       var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
@@ -97,7 +109,7 @@ namespace Assets.Scripts.Entities.Player.Turret
           EnemyLookup = SystemAPI.GetComponentLookup<SimpleEnemy>(true),
           TurretTopLookup = SystemAPI.GetComponentLookup<TurretTop>(true),
 
-          BulletCollisionEventLookup = SystemAPI.GetBufferLookup<BulletCollisionEvent>(),
+          DamageEventLookup = SystemAPI.GetBufferLookup<DamageEvent>(),
         }
         .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
     }

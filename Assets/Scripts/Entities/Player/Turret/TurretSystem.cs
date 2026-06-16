@@ -25,14 +25,13 @@ namespace Assets.Scripts.Entities.Player.Turret
 
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
 
-
-      public readonly void Execute(ref TurretTop turretTop, ref LocalTransform localTransform)
+      public readonly void Execute(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
       {
-        RotateTurret(turretTop, ref localTransform);
-        HandleBullet(ref turretTop, localTransform);
+        RotateTurret(ref turretAttributes, ref localTransform);
+        HandleBullet(ref turretAttributes, localTransform);
       }
 
-      readonly void RotateTurret(in TurretTop turretTop, ref LocalTransform localTransform)
+      readonly void RotateTurret(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
       {
         var directionToTarget = TargetLookPosition - localTransform.Position;
         var targetAngle = math.atan2(directionToTarget.y, directionToTarget.x) + math.radians(-90f);
@@ -45,16 +44,16 @@ namespace Assets.Scripts.Entities.Player.Turret
           localTransform.Rotation = quaternion.RotateZ(targetAngle);
         else
         {
-          var rotationSpeed = turretTop.RotationSpeed * DeltaTime;
+          var rotationSpeed = turretAttributes.RotationSpeed * DeltaTime;
           localTransform.Rotation = quaternion.RotateZ(currentAngle + math.clamp(deltaAngle, -rotationSpeed, rotationSpeed));
         }
       }
 
-      readonly void HandleBullet(ref TurretTop turretTop, in LocalTransform localTransform)
+      readonly void HandleBullet(ref TurretAttributes turretAttributes, in LocalTransform localTransform)
       {
-        if (CurrentTime - turretTop.LastShotTime < turretTop.FireRate)
+        if (CurrentTime - turretAttributes.TimeSinceLastShot < turretAttributes.FireRate)
           return;
-        turretTop.LastShotTime = CurrentTime;
+        turretAttributes.TimeSinceLastShot = CurrentTime;
 
         BulletSpawnEvents.Add(new BulletSpawnEvent
         {
