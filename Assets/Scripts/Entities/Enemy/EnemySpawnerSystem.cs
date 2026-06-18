@@ -1,8 +1,5 @@
-
-using Assets.Scripts.Entities.Player.Turret;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Rendering;
 using Unity.Transforms;
 using Assets.Scripts.Entities.Game;
 using Unity.Burst;
@@ -68,13 +65,6 @@ namespace Assets.Scripts.Entities.Enemy
 
       // Add material override
       state.EntityManager.AddComponentData(enemy, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
-    }
-
-    //
-    [MaterialProperty("_Color")]
-    public struct ColorOverride : IComponentData
-    {
-      public float4 Value;
     }
   }
 }

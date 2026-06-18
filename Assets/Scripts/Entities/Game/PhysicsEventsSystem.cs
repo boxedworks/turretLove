@@ -1,6 +1,5 @@
 
 using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -28,7 +27,7 @@ namespace Assets.Scripts.Entities.Game
     }
 
     [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    public readonly void OnUpdate(ref SystemState state)
     {
       // Gather knockback events and schedule the job
       state.Dependency = new KnockbackJob()

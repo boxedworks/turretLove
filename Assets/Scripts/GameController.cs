@@ -1,4 +1,3 @@
-using Assets.Scripts.Input;
 using UnityEngine;
 
 namespace Assets.Scripts
