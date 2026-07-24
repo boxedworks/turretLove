@@ -79,7 +79,8 @@ namespace Assets.Scripts.Entities.Player.Turret
         var damageEventBuffer = DamageEventLookup[nonBulletEntity];
         damageEventBuffer.Add(new DamageEvent()
         {
-          DamagePosition = bulletPosition
+          DamagePosition = bulletPosition,
+          DamageAmount = 1f
         });
 
         // Apply a knockback force to the entity based on the direction from the bullet to the entity
@@ -109,6 +110,7 @@ namespace Assets.Scripts.Entities.Player.Turret
           TurretTopLookup = SystemAPI.GetComponentLookup<TurretTop>(true),
 
           DamageEventLookup = SystemAPI.GetBufferLookup<DamageEvent>(),
+          KnockbackEventLookup = SystemAPI.GetBufferLookup<KnockbackEvent>()
         }
         .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
     }

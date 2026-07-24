@@ -28,8 +28,9 @@ namespace Assets.Scripts.Entities.Enemy
 
       var enemySpawner = SystemAPI.GetSingleton<EnemySpawner>();
       var enemy = state.EntityManager.Instantiate(enemySpawner.GoblinPrefab);
-      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = 1f, Speed = 1f });
+      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = 2f, Speed = 1f });
       state.EntityManager.AddBuffer<DamageEvent>(enemy);
+      state.EntityManager.AddBuffer<KnockbackEvent>(enemy);
 
       // Spawn enemies arounnd the center of the map using 4 borders
       var random = new Random((uint)System.DateTime.Now.Ticks);
@@ -52,7 +53,15 @@ namespace Assets.Scripts.Entities.Enemy
           spawnPosition = new float3(-spawnXRaidus, random.NextFloat(-spawnYRadius, spawnYRadius), 0);
           break;
       }
-      state.EntityManager.SetComponentData(enemy, LocalTransform.FromPosition(spawnPosition));
+
+      // Set position and scale
+      var localTransform = new LocalTransform
+      {
+        Position = spawnPosition,
+        Scale = 0.5f,
+        Rotation = quaternion.identity
+      };
+      state.EntityManager.SetComponentData(enemy, localTransform);
 
       // Change collision layer to avoid colliding with the map
       var physicsCollider = SystemAPI.GetComponentRW<Unity.Physics.PhysicsCollider>(enemy);

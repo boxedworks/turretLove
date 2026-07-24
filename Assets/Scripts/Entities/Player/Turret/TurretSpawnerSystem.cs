@@ -57,6 +57,11 @@ namespace Assets.Scripts.Entities.Player.Turret
     }
   }
 
+  public partial struct TurretSpawnEvent : IBufferElementData
+  {
+    public float3 SpawnPosition;
+  }
+
   public partial struct TurretTop : IComponentData
   {
   }

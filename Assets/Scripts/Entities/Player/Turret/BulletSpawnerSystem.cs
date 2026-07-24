@@ -34,12 +34,11 @@ namespace Assets.Scripts.Entities.Player.Turret
       {
         var bulletEntity = state.EntityManager.Instantiate(bulletSpawner.Prefab);
         state.EntityManager.AddComponent<Bullet>(bulletEntity);
-        state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPosition(float3.zero));
 
         // For testing, set random rotation and velocity
         var spawnPosition = spawnEvent.SpawnPosition;
         var rotation = spawnEvent.SpawnRotation;
-        var scale = 0.25f;
+        var scale = 0.5f;
 
         // Set position, rotation and scale
         state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPositionRotationScale(spawnPosition, rotation, scale));
