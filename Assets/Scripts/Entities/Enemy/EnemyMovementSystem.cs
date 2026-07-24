@@ -23,7 +23,7 @@ namespace Assets.Scripts.Entities.Enemy
       {
         var direction = math.normalize(TargetPosition - transform.Position);
         var speed = enemy.Speed;
-        var force = direction * speed * DeltaTime;
+        var force = DeltaTime * speed * direction;
         velocity.ApplyLinearImpulse(mass, force);
       }
     }

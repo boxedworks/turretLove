@@ -25,12 +25,20 @@ namespace Assets.Scripts.Entities.Enemy
       if (time - _lastSpawnTime < 0.25f)
         return;
       _lastSpawnTime = time;
-
       var enemySpawner = SystemAPI.GetSingleton<EnemySpawner>();
+
+      var health = 2f;
+      var speed = 0.3f;
+      var mass = 1f;
+
       var enemy = state.EntityManager.Instantiate(enemySpawner.GoblinPrefab);
-      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = 2f, Speed = 1f });
+      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = health, Speed = speed });
       state.EntityManager.AddBuffer<DamageEvent>(enemy);
       state.EntityManager.AddBuffer<KnockbackEvent>(enemy);
+
+      var physicsMass = state.EntityManager.GetComponentData<Unity.Physics.PhysicsMass>(enemy);
+      physicsMass.InverseMass = 1f / mass;
+      state.EntityManager.SetComponentData(enemy, physicsMass);
 
       // Spawn enemies arounnd the center of the map using 4 borders
       var random = new Random((uint)System.DateTime.Now.Ticks);

@@ -57,10 +57,13 @@ namespace Assets.Scripts.Entities.Game.Audio
         switch (audioEvent.Type)
         {
           case AudioEvent.EventType.Shoot:
-            PlaySound();
+            PlaySound(0);
             break;
-          case AudioEvent.EventType.EnemyDeath:
-            PlaySound();
+          case AudioEvent.EventType.EnemyDestroy:
+            PlaySound(1);
+            break;
+          case AudioEvent.EventType.GoblinDamage:
+            PlaySound(2);
             break;
         }
       }
@@ -79,17 +82,17 @@ namespace Assets.Scripts.Entities.Game.Audio
     }
 
     //
-    void PlaySound()
+    void PlaySound(int index)
     {
-      if (_audioSourcePool.Count == 0)
+      if (_audioSourcePool.Count <= index)
       {
-        Debug.LogWarning("No available audio sources in pool!");
+        Debug.LogError($"Cannot play sound: No available audio source in the pool for index {index} / {_audioSourcePool.Count}");
         return;
       }
 
       var audioClip = _audioSourcePool.Dequeue();
       _activeAudioSources.Add(audioClip);
-      var audioData = _audioDataGroups["game"].AudioDataList[0];
+      var audioData = _audioDataGroups["game"].AudioDataList[index];
       audioClip.Source.clip = audioData.Sfx;
       audioClip.Source.volume = audioData.Volume;
       audioClip.Source.pitch = audioData.Pitch + _random.NextFloat(-0.15f, 0.15f);
@@ -102,7 +105,8 @@ namespace Assets.Scripts.Entities.Game.Audio
     public enum EventType
     {
       Shoot,
-      EnemyDeath
+      EnemyDestroy,
+      GoblinDamage
     }
 
     public EventType Type;

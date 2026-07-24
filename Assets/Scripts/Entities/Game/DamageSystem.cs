@@ -34,7 +34,7 @@ namespace Assets.Scripts.Entities.Game
             Ecb.DestroyEntity(entity);
 
             // Add audio event for enemy death
-            AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDeath });
+            AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDestroy });
           }
           else
           {
@@ -48,7 +48,7 @@ namespace Assets.Scripts.Entities.Game
             });
 
             // Add audio event for enemy damage
-            AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDeath });
+            AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.GoblinDamage });
           }
         }
       }

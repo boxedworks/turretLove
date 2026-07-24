@@ -61,7 +61,7 @@ namespace Assets.Scripts.Entities.Player.Turret
         });
 
         // Add audio event for enemy death
-        AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDeath });
+        AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.Shoot });
       }
     }
 
