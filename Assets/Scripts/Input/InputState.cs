@@ -8,5 +8,9 @@ namespace Assets.Scripts.Input
   {
     public float3 MouseWorldPosition;
     public bool Mouse1Down;
+    public bool ArrowUpDown;
+    public bool ArrowDownDown;
+    public bool ArrowLeftDown;
+    public bool ArrowRightDown;
   }
 }

@@ -15,7 +15,7 @@ namespace Assets.Scripts.Entities.Enemy
   {
     public override void Bake(EnemySpawnerAuthoring authoring)
     {
-      var entity = GetEntity(TransformUsageFlags.Dynamic);
+      var entity = GetEntity(TransformUsageFlags.None);
       AddComponent(entity, new EnemySpawner
       {
         SpawnInterval = authoring.SpawnInterval,

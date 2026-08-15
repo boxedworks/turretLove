@@ -4,30 +4,25 @@ using UnityEngine;
 
 namespace Assets.Scripts.Entities.Ingredient
 {
-
-  public partial struct IngredientAuthoringSystem : ISystem
+  public class IngredientSpawnerAuthoring : MonoBehaviour
   {
-    public class IngredientSpawnerAuthoring : MonoBehaviour
-    {
-      public GameObject IngredientPrefab;
-    }
+    public GameObject IngredientPrefab;
+  }
 
-    public class IngredientSpawnerBaker : Baker<IngredientSpawnerAuthoring>
+  public class IngredientSpawnerBaker : Baker<IngredientSpawnerAuthoring>
+  {
+    public override void Bake(IngredientSpawnerAuthoring authoring)
     {
-      public override void Bake(IngredientSpawnerAuthoring authoring)
+      var entity = GetEntity(TransformUsageFlags.None);
+      AddComponent(entity, new IngredientSpawner
       {
-        var entity = GetEntity(TransformUsageFlags.Dynamic);
-        AddComponent(entity, new IngredientSpawner
-        {
-          IngredientPrefab = GetEntity(authoring.IngredientPrefab, TransformUsageFlags.Dynamic)
-        });
-      }
-    }
-
-    public struct IngredientSpawner : IComponentData
-    {
-      public Entity IngredientPrefab;
+        IngredientPrefab = GetEntity(authoring.IngredientPrefab, TransformUsageFlags.Dynamic)
+      });
     }
   }
 
+  public struct IngredientSpawner : IComponentData
+  {
+    public Entity IngredientPrefab;
+  }
 }

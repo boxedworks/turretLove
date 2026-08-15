@@ -8,7 +8,6 @@ namespace Assets.Scripts.Entities.Game.Audio
   public partial class AudioSystem : SystemBase
   {
 
-    DynamicBuffer<AudioEvent> _audioEvents;
     Queue<CustomAudioSource> _audioSourcePool;
     List<CustomAudioSource> _activeAudioSources;
     Dictionary<string, AudioDataGroupScriptableObject> _audioDataGroups;
@@ -22,8 +21,7 @@ namespace Assets.Scripts.Entities.Game.Audio
 
     protected override void OnCreate()
     {
-      var audioEventsEntity = EntityManager.CreateEntity();
-      EntityManager.AddBuffer<AudioEvent>(audioEventsEntity);
+      EntityManager.AddBuffer<AudioEvent>(EntityManager.CreateEntity());
 
       _audioSourcePool = new();
       _activeAudioSources = new();
@@ -49,25 +47,29 @@ namespace Assets.Scripts.Entities.Game.Audio
     protected override void OnUpdate()
     {
       // Play all sounds in buffer by creating new audio source (for now)
-      _audioEvents = SystemAPI.GetBuffer<AudioEvent>(SystemAPI.GetSingletonEntity<AudioEvent>());
-      if (_audioEvents.Length == 0)
-        return;
-      foreach (var audioEvent in _audioEvents)
+      var audioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>();
+      if (audioEventBuffer.Length > 0)
       {
-        switch (audioEvent.Type)
+        var events = audioEventBuffer.ToNativeArray(Unity.Collections.Allocator.Temp);
+        audioEventBuffer.Clear();
+
+        foreach (var audioEvent in events)
         {
-          case AudioEvent.EventType.Shoot:
-            PlaySound(0);
-            break;
-          case AudioEvent.EventType.EnemyDestroy:
-            PlaySound(1);
-            break;
-          case AudioEvent.EventType.GoblinDamage:
-            PlaySound(2);
-            break;
+          switch (audioEvent.Type)
+          {
+            case AudioEvent.EventType.Shoot:
+              PlaySound(0);
+              break;
+            case AudioEvent.EventType.EnemyDestroy:
+              PlaySound(1);
+              break;
+            case AudioEvent.EventType.GoblinDamage:
+              PlaySound(2);
+              break;
+          }
         }
+        events.Dispose();
       }
-      _audioEvents.Clear();
 
       // Recycle finished audio sources
       for (var i = _activeAudioSources.Count - 1; i >= 0; i--)

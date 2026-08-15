@@ -1,10 +1,10 @@
 
 using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game.Audio;
+using Assets.Scripts.Entities.Ingredient;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Physics;
 using Unity.Transforms;
 
 namespace Assets.Scripts.Entities.Game
@@ -16,8 +16,11 @@ namespace Assets.Scripts.Entities.Game
     {
       public EntityCommandBuffer Ecb;
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
+      public DynamicBuffer<IngredientSpawnEvent> IngredientSpawnBuffer;
 
-      public readonly void Execute(Entity entity, ref SimpleEnemy simpleEnemy, ref DynamicBuffer<DamageEvent> damageBuffer)
+      public Random Random;
+
+      public readonly void Execute(Entity entity, ref SimpleEnemy simpleEnemy, LocalTransform transform, ref DynamicBuffer<DamageEvent> damageBuffer)
       {
         if (damageBuffer.Length > 0)
         {
@@ -27,6 +30,9 @@ namespace Assets.Scripts.Entities.Game
             simpleEnemy.Health -= damageEvent.DamageAmount;
           }
           damageBuffer.Clear();
+
+          // Test; spawn ingredient
+          IngredientSpawnerSystem.SpawnIngredient(IngredientSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), IngredientType.Mana);
 
           // Destroy entity using ecb
           if (simpleEnemy.Health <= 0f)
@@ -62,7 +68,9 @@ namespace Assets.Scripts.Entities.Game
       state.Dependency = new DamageJob()
       {
         Ecb = ecb,
-        AudioEventBuffer = SystemAPI.GetBuffer<AudioEvent>(SystemAPI.GetSingletonEntity<AudioEvent>())
+        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>(),
+        IngredientSpawnBuffer = SystemAPI.GetSingletonBuffer<IngredientSpawnEvent>(),
+        Random = new Random((uint)System.DateTime.Now.Ticks)
       }
         .Schedule(state.Dependency);
     }

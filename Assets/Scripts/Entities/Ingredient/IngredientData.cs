@@ -15,7 +15,9 @@ namespace Assets.Scripts.Entities.Ingredient
   public struct IngredientData : IComponentData
   {
     public IngredientType Type;
-    public float3 Position;
+
+    public float3 SpawnPosition;
+    public float SpawnTime, SpawnArcHeight, SpawnArcDuration, SpawnArcDirection;
   }
 
 }

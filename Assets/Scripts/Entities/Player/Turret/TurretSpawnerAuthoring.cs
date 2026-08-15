@@ -13,7 +13,7 @@ namespace Assets.Scripts.Entities.Player.Turret
   {
     public override void Bake(TurretSpawnerAuthoring authoring)
     {
-      var entity = GetEntity(TransformUsageFlags.Dynamic);
+      var entity = GetEntity(TransformUsageFlags.None);
       AddComponent(entity, new TurretSpawner
       {
         TurretTopPrefab = GetEntity(authoring.TurretTopPrefab, TransformUsageFlags.Dynamic),

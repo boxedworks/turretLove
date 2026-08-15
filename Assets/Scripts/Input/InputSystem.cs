@@ -18,15 +18,23 @@ namespace Assets.Scripts.Input
     {
       var inputState = SystemAPI.GetSingletonRW<InputState>();
 
-      // Check mouse down
-      var mousePosition = Mouse.current.position.ReadValue();
-      var mouseWorldPosition = CommonResources.s_MainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, CommonResources.s_MainCamera.transform.position.z));
+      var mouse = Mouse.current;
 
-      var mouse1Down = Mouse.current.leftButton.isPressed;
+      // Check mouse down
+      var mousePosition = mouse.position.ReadValue();
+      var mouseWorldPosition = CommonResources.s_MainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, CommonResources.s_MainCamera.transform.position.z));
+      mouseWorldPosition.z = 0f;
+
+      var mouse1Down = mouse.leftButton.isPressed;
+      var keyboard = Keyboard.current;
 
       // Set state
       inputState.ValueRW.MouseWorldPosition = mouseWorldPosition;
       inputState.ValueRW.Mouse1Down = mouse1Down;
+      inputState.ValueRW.ArrowUpDown = keyboard.upArrowKey.isPressed;
+      inputState.ValueRW.ArrowDownDown = keyboard.downArrowKey.isPressed;
+      inputState.ValueRW.ArrowLeftDown = keyboard.leftArrowKey.isPressed;
+      inputState.ValueRW.ArrowRightDown = keyboard.rightArrowKey.isPressed;
     }
   }
 }

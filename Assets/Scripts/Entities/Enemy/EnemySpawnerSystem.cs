@@ -41,24 +41,23 @@ namespace Assets.Scripts.Entities.Enemy
       state.EntityManager.SetComponentData(enemy, physicsMass);
 
       // Spawn enemies arounnd the center of the map using 4 borders
-      var random = new Random((uint)System.DateTime.Now.Ticks);
-      var spawnSide = random.NextInt(0, 4);
+      var spawnSide = _random.NextInt(0, 4);
       var spawnXRaidus = 10f;
       var spawnYRadius = 6f;
       var spawnPosition = float3.zero;
       switch (spawnSide)
       {
         case 0: // Top
-          spawnPosition = new float3(random.NextFloat(-spawnXRaidus, spawnXRaidus), spawnYRadius, 0);
+          spawnPosition = new float3(_random.NextFloat(-spawnXRaidus, spawnXRaidus), spawnYRadius, 0);
           break;
         case 1: // Right
-          spawnPosition = new float3(spawnXRaidus, random.NextFloat(-spawnYRadius, spawnYRadius), 0);
+          spawnPosition = new float3(spawnXRaidus, _random.NextFloat(-spawnYRadius, spawnYRadius), 0);
           break;
         case 2: // Bottom
-          spawnPosition = new float3(random.NextFloat(-spawnXRaidus, spawnXRaidus), -spawnYRadius, 0);
+          spawnPosition = new float3(_random.NextFloat(-spawnXRaidus, spawnXRaidus), -spawnYRadius, 0);
           break;
         case 3: // Left
-          spawnPosition = new float3(-spawnXRaidus, random.NextFloat(-spawnYRadius, spawnYRadius), 0);
+          spawnPosition = new float3(-spawnXRaidus, _random.NextFloat(-spawnYRadius, spawnYRadius), 0);
           break;
       }
 
