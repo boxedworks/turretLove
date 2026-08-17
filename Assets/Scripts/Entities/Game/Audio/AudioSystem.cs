@@ -66,6 +66,9 @@ namespace Assets.Scripts.Entities.Game.Audio
             case AudioEvent.EventType.GoblinDamage:
               PlaySound(2);
               break;
+            case AudioEvent.EventType.LootPickup:
+              PlaySound(3, true);
+              break;
           }
         }
         events.Dispose();
@@ -83,10 +86,25 @@ namespace Assets.Scripts.Entities.Game.Audio
       }
     }
 
-    //
-    void PlaySound(int index)
+    void PlaySound(int index, bool oneShot = false)
     {
-      if (_audioSourcePool.Count <= index)
+      var audioData = _audioDataGroups["game"].AudioDataList[index];
+      var pitch = audioData.Pitch + _random.NextFloat(-0.15f, 0.15f);
+
+      if (oneShot)
+      {
+        // Reuse an active source playing the same clip to avoid consuming a pool slot
+        foreach (var active in _activeAudioSources)
+        {
+          if (active.Source.clip == audioData.Sfx)
+          {
+            active.Source.PlayOneShot(audioData.Sfx, audioData.Volume);
+            return;
+          }
+        }
+      }
+
+      if (_audioSourcePool.Count == 0)
       {
         Debug.LogError($"Cannot play sound: No available audio source in the pool for index {index} / {_audioSourcePool.Count}");
         return;
@@ -94,11 +112,14 @@ namespace Assets.Scripts.Entities.Game.Audio
 
       var audioClip = _audioSourcePool.Dequeue();
       _activeAudioSources.Add(audioClip);
-      var audioData = _audioDataGroups["game"].AudioDataList[index];
       audioClip.Source.clip = audioData.Sfx;
       audioClip.Source.volume = audioData.Volume;
-      audioClip.Source.pitch = audioData.Pitch + _random.NextFloat(-0.15f, 0.15f);
-      audioClip.Source.Play();
+      audioClip.Source.pitch = pitch;
+
+      if (oneShot)
+        audioClip.Source.PlayOneShot(audioData.Sfx, audioData.Volume);
+      else
+        audioClip.Source.Play();
     }
   }
 
@@ -108,7 +129,8 @@ namespace Assets.Scripts.Entities.Game.Audio
     {
       Shoot,
       EnemyDestroy,
-      GoblinDamage
+      GoblinDamage,
+      LootPickup
     }
 
     public EventType Type;

@@ -23,7 +23,7 @@ namespace Assets.Scripts.Entities.Player.Character
       var player = ecb.Instantiate(spawner.PlayerPrefab);
 
       ecb.SetComponent(player, LocalTransform.FromPosition(new float3(1f, 0f, 0f)));
-      ecb.SetComponent(player, new PlayerAttributes
+      ecb.AddComponent(player, new PlayerAttributes
       {
         MaxHealth = 100f,
         CurrentHealth = 100f,

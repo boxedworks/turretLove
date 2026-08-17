@@ -9,6 +9,7 @@ namespace Assets.Scripts.Entities.Enemy
     public float SpawnInterval = 1f;
 
     public GameObject GoblinPrefab;
+    public GameObject GhostPrefab;
   }
 
   public class EnemySpawnerBaker : Baker<EnemySpawnerAuthoring>
@@ -19,7 +20,9 @@ namespace Assets.Scripts.Entities.Enemy
       AddComponent(entity, new EnemySpawner
       {
         SpawnInterval = authoring.SpawnInterval,
-        GoblinPrefab = GetEntity(authoring.GoblinPrefab, TransformUsageFlags.Dynamic)
+
+        GoblinPrefab = GetEntity(authoring.GoblinPrefab, TransformUsageFlags.Dynamic),
+        GhostPrefab = GetEntity(authoring.GhostPrefab, TransformUsageFlags.Dynamic)
       });
     }
   }
@@ -27,6 +30,8 @@ namespace Assets.Scripts.Entities.Enemy
   public struct EnemySpawner : IComponentData
   {
     public float SpawnInterval;
+
     public Entity GoblinPrefab;
+    public Entity GhostPrefab;
   }
 }

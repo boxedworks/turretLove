@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Assets.Scripts.Entities.Game;
+using Assets.Scripts.Entities.Game.Scroll;
 using Unity.Burst;
 
 namespace Assets.Scripts.Entities.Enemy
@@ -31,8 +32,16 @@ namespace Assets.Scripts.Entities.Enemy
       var speed = 0.3f;
       var mass = 1f;
 
-      var enemy = state.EntityManager.Instantiate(enemySpawner.GoblinPrefab);
-      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Health = health, Speed = speed });
+      var enemyType = EnemyType.Goblin;
+      var prefab = enemyType switch
+      {
+        EnemyType.Goblin => enemySpawner.GoblinPrefab,
+        EnemyType.Ghost => enemySpawner.GhostPrefab,
+        _ => enemySpawner.GoblinPrefab
+      };
+
+      var enemy = state.EntityManager.Instantiate(prefab);
+      state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Type = enemyType, Health = health, Speed = speed });
       state.EntityManager.AddBuffer<DamageEvent>(enemy);
       state.EntityManager.AddBuffer<KnockbackEvent>(enemy);
 
@@ -41,7 +50,7 @@ namespace Assets.Scripts.Entities.Enemy
       state.EntityManager.SetComponentData(enemy, physicsMass);
 
       // Spawn enemies arounnd the center of the map using 4 borders
-      var spawnSide = _random.NextInt(0, 4);
+      var spawnSide = 1;//_random.NextInt(0, 4);
       var spawnXRaidus = 10f;
       var spawnYRadius = 6f;
       var spawnPosition = float3.zero;
@@ -81,6 +90,7 @@ namespace Assets.Scripts.Entities.Enemy
 
       // Add material override
       state.EntityManager.AddComponentData(enemy, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
+      state.EntityManager.AddComponentData(enemy, new ScrollComponent { Direction = new float2(-1f, 0f), Speed = 0.5f });
     }
   }
 }

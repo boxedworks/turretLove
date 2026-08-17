@@ -1,7 +1,7 @@
 
 using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game.Audio;
-using Assets.Scripts.Entities.Ingredient;
+using Assets.Scripts.Entities.Loot;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -16,7 +16,7 @@ namespace Assets.Scripts.Entities.Game
     {
       public EntityCommandBuffer Ecb;
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
-      public DynamicBuffer<IngredientSpawnEvent> IngredientSpawnBuffer;
+      public DynamicBuffer<LootSpawnEvent> LootSpawnBuffer;
 
       public Random Random;
 
@@ -31,17 +31,22 @@ namespace Assets.Scripts.Entities.Game
           }
           damageBuffer.Clear();
 
-          // Test; spawn ingredient
-          IngredientSpawnerSystem.SpawnIngredient(IngredientSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), IngredientType.Mana);
+          // Roll loot tables
+          LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
 
-          // Destroy entity using ecb
+          // Destroy entity using ecb; death event
           if (simpleEnemy.Health <= 0f)
           {
             Ecb.DestroyEntity(entity);
 
             // Add audio event for enemy death
             AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDestroy });
+
+            // Roll additional loot tables for death event
+            LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
           }
+
+          // Damage event
           else
           {
 
@@ -69,7 +74,7 @@ namespace Assets.Scripts.Entities.Game
       {
         Ecb = ecb,
         AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>(),
-        IngredientSpawnBuffer = SystemAPI.GetSingletonBuffer<IngredientSpawnEvent>(),
+        LootSpawnBuffer = SystemAPI.GetSingletonBuffer<LootSpawnEvent>(),
         Random = new Random((uint)System.DateTime.Now.Ticks)
       }
         .Schedule(state.Dependency);
