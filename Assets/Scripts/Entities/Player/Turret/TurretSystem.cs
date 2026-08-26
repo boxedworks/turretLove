@@ -66,6 +66,7 @@ namespace Assets.Scripts.Entities.Player.Turret
 
     // Job to gather closest target
     [BurstCompile]
+    [WithNone(typeof(TurretDefeated))]
     partial struct GatherClosestTargetJob : IJobEntity
     {
 

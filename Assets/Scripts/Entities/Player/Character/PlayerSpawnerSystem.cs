@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities.Game;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -34,6 +35,7 @@ namespace Assets.Scripts.Entities.Player.Character
         Damage = 1f,
         AttackSpeed = 1f
       });
+      ecb.AddBuffer<DamageEvent>(player);
 
       // // Change collision layer to avoid colliding with the map
       // var collider = physicsCollider.Value;

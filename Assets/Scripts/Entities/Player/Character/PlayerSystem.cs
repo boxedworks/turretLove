@@ -26,6 +26,7 @@ namespace Assets.Scripts.Entities.Player.Character
     }
 
     [BurstCompile]
+    [WithNone(typeof(PlayerDefeated))]
     partial struct PlayerMovementJob : IJobEntity
     {
       public NativeReference<float2> MoveDirection;

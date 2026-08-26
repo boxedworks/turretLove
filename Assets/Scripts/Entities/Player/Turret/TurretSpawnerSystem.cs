@@ -1,3 +1,4 @@
+using Assets.Scripts.Entities.Game;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -40,6 +41,12 @@ namespace Assets.Scripts.Entities.Player.Turret
         TimeSinceLastShot = 0f
       });
       state.EntityManager.AddComponent<TurretBase>(turretBaseInstance);
+      state.EntityManager.AddComponentData(turretBaseInstance, new TurretHealth
+      {
+        MaxHealth = 100f,
+        CurrentHealth = 100f
+      });
+      state.EntityManager.AddBuffer<DamageEvent>(turretBaseInstance);
 
       // Set initial position of turret (for now, just place it at origin)
       var turretPosition = float3.zero;

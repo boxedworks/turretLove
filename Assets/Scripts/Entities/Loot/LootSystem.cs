@@ -18,6 +18,9 @@ namespace Assets.Scripts.Entities.Loot
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+      if (SystemAPI.HasSingleton<PlayerDefeated>())
+        return;
+
       var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
       var playerPosition = new NativeReference<float3>(SystemAPI.GetComponentLookup<LocalTransform>(true).GetRefRO(SystemAPI.GetSingletonEntity<PlayerAttributes>()).ValueRO.Position, Allocator.TempJob);
       var currentTime = new NativeReference<float>((float)SystemAPI.Time.ElapsedTime, Allocator.TempJob);
