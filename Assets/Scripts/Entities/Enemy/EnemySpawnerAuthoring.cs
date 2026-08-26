@@ -10,6 +10,7 @@ namespace Assets.Scripts.Entities.Enemy
 
     public GameObject GoblinPrefab;
     public GameObject GhostPrefab;
+    public GameObject TreePrefab;
   }
 
   public class EnemySpawnerBaker : Baker<EnemySpawnerAuthoring>
@@ -22,7 +23,8 @@ namespace Assets.Scripts.Entities.Enemy
         SpawnInterval = authoring.SpawnInterval,
 
         GoblinPrefab = GetEntity(authoring.GoblinPrefab, TransformUsageFlags.Dynamic),
-        GhostPrefab = GetEntity(authoring.GhostPrefab, TransformUsageFlags.Dynamic)
+        GhostPrefab = GetEntity(authoring.GhostPrefab, TransformUsageFlags.Dynamic),
+        TreePrefab = GetEntity(authoring.TreePrefab, TransformUsageFlags.Dynamic)
       });
     }
   }
@@ -31,7 +33,8 @@ namespace Assets.Scripts.Entities.Enemy
   {
     public float SpawnInterval;
 
-    public Entity GoblinPrefab;
-    public Entity GhostPrefab;
+    public Entity GoblinPrefab,
+      GhostPrefab,
+      TreePrefab;
   }
 }

@@ -6,8 +6,11 @@ namespace Assets.Scripts.Entities.Enemy
   public enum EnemyType
   {
     None,
+
     Goblin,
-    Ghost
+    Ghost,
+
+    Tree
   }
 
   public partial struct SimpleEnemy : IComponentData
@@ -15,6 +18,5 @@ namespace Assets.Scripts.Entities.Enemy
     public EnemyType Type;
 
     public float Health;
-    public float Speed;
   }
 }

@@ -1,5 +1,6 @@
 
 using Assets.Scripts.Entities.Enemy;
+using Assets.Scripts.Entities.Game.Scroll;
 using Assets.Scripts.Entities.Loot.DropTables;
 using Unity.Collections;
 using Unity.Entities;
@@ -63,6 +64,7 @@ namespace Assets.Scripts.Entities.Loot
           {
             var loot = state.EntityManager.Instantiate(prefab);
             state.EntityManager.AddComponentData(loot, new LootData { Type = dropType });
+            state.EntityManager.AddComponentData(loot, new ScrollComponent { Direction = new float2(-1f, 0f), Speed = 0.5f });
             state.EntityManager.AddComponentData(loot, new LootSpawnData
             {
               SpawnPosition = spawnEvent.SpawnPosition,

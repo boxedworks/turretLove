@@ -5,7 +5,7 @@ namespace Assets.Scripts.Entities.Loot.DropTables
   [Serializable]
   public struct DropTable
   {
-    public int Rolls;
+    public float RollChance;
     public DropEntry[] Entries;
   }
 }

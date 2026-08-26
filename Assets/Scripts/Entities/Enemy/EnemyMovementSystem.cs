@@ -12,18 +12,16 @@ namespace Assets.Scripts.Entities.Enemy
   [UpdateInGroup(typeof(SimulationSystemGroup))]
   public partial struct EnemyMovementSystem : ISystem
   {
-
     [BurstCompile]
     partial struct EnemyMovementJob : IJobEntity
     {
       public float3 TargetPosition;
       public float DeltaTime;
 
-      public readonly void Execute(ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform, in SimpleEnemy enemy)
+      public readonly void Execute(ref PhysicsVelocity velocity, ref PhysicsMass mass, in LocalTransform transform, in AttractToPlayer attractToPlayer)
       {
         var direction = math.normalize(TargetPosition - transform.Position);
-        var speed = enemy.Speed;
-        var force = DeltaTime * speed * direction;
+        var force = DeltaTime * attractToPlayer.Speed * direction;
         velocity.ApplyLinearImpulse(mass, force);
       }
     }

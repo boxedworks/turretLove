@@ -52,32 +52,85 @@ namespace Assets.Scripts.Entities.Loot.DropTables
       var rng = new System.Random();
 
       foreach (var dropTable in enemyDropTable.DropTables)
-      {
-        var rolls = dropTable.Rolls;
-        for (var i = 0; i < rolls; i++)
-        {
-          var totalWeight = 0.0;
-          foreach (var entry in dropTable.Entries)
-            totalWeight += entry.DropChance;
-
-          var roll = rng.NextDouble() * totalWeight;
-          var cumulative = 0.0;
-          foreach (var entry in dropTable.Entries)
-          {
-            cumulative += entry.DropChance;
-            if (roll >= cumulative)
-              continue;
-
-            var amount = rng.Next(entry.MinAmount, entry.MaxAmount + 1);
-            results[entry.Type] = results.TryGetValue(entry.Type, out var existing)
-              ? existing + amount
-              : amount;
-            break;
-          }
-        }
-      }
+        RollDropTable(dropTable, results, rng);
 
       return results;
+    }
+
+    private static void RollDropTable(
+      DropTable dropTable,
+      Dictionary<LootType, int> results,
+      System.Random rng)
+    {
+      var totalWeight = AddGuaranteedDrops(dropTable, results, rng);
+
+      if (totalWeight <= 0f)
+        return;
+
+      var totalRolls = GetTotalRolls(dropTable.RollChance, rng);
+      for (var i = 0; i < totalRolls; i++)
+        RollWeightedDrop(dropTable.Entries, totalWeight, results, rng);
+    }
+
+    private static float AddGuaranteedDrops(
+      DropTable dropTable,
+      Dictionary<LootType, int> results,
+      System.Random rng)
+    {
+      var totalWeight = 0f;
+
+      foreach (var entry in dropTable.Entries)
+      {
+        var guaranteedDrops = Mathf.FloorToInt(entry.DropChance / 100f);
+        for (var i = 0; i < guaranteedDrops; i++)
+          AddDrop(results, entry, rng);
+
+        totalWeight += entry.DropChance % 100f;
+      }
+
+      return totalWeight;
+    }
+
+    private static int GetTotalRolls(float rollChance, System.Random rng)
+    {
+      var totalRolls = Mathf.FloorToInt(rollChance / 100f);
+      var remainingRollChance = rollChance % 100f;
+
+      if (rng.NextDouble() * 100f < remainingRollChance)
+        totalRolls++;
+
+      return totalRolls;
+    }
+
+    private static void RollWeightedDrop(
+      DropEntry[] entries,
+      float totalWeight,
+      Dictionary<LootType, int> results,
+      System.Random rng)
+    {
+      var roll = rng.NextDouble() * totalWeight;
+      var cumulative = 0f;
+
+      foreach (var entry in entries)
+      {
+        cumulative += entry.DropChance % 100f;
+        if (roll >= cumulative)
+          continue;
+
+        AddDrop(results, entry, rng);
+        break;
+      }
+    }
+
+    private static void AddDrop(
+      Dictionary<LootType, int> results,
+      DropEntry entry,
+      System.Random rng)
+    {
+      var amount = rng.Next(entry.MinAmount, entry.MaxAmount + 1);
+      results[entry.Type] = results.TryGetValue(entry.Type, out var existing)
+        ? existing + amount
+        : amount;
     }
   }
 }

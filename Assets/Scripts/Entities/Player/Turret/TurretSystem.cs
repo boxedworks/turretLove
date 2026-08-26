@@ -1,5 +1,4 @@
 
-using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game.Audio;
 using Assets.Scripts.Input;
 using Unity.Burst;
@@ -60,30 +59,30 @@ namespace Assets.Scripts.Entities.Player.Turret
           SpawnRotation = localTransform.Rotation,
         });
 
-        // Add audio event for enemy death
+        // Add audio event for turret shooting
         AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.Shoot });
       }
     }
 
-    // Job to gather closest enemy
+    // Job to gather closest target
     [BurstCompile]
-    partial struct GatherClosestEnemyJob : IJobEntity
+    partial struct GatherClosestTargetJob : IJobEntity
     {
 
-      public NativeReference<float3> ClosestEnemyPosition;
-      public NativeReference<float> ClosestEnemyDistance;
+      public NativeReference<float3> ClosestTargetPosition;
+      public NativeReference<float> ClosestTargetDistance;
 
       public float3 SourcePosition;
 
-      public void Execute(ref SimpleEnemy simpleEnemy, in LocalTransform localTransform)
+      public void Execute(in TurretTargetable turretTargetable, in LocalTransform localTransform)
       {
         var directionToTarget = SourcePosition - localTransform.Position;
         var distanceToTarget = math.length(directionToTarget);
 
-        if (distanceToTarget < ClosestEnemyDistance.Value)
+        if (distanceToTarget < ClosestTargetDistance.Value)
         {
-          ClosestEnemyDistance.Value = distanceToTarget;
-          ClosestEnemyPosition.Value = localTransform.Position;
+          ClosestTargetDistance.Value = distanceToTarget;
+          ClosestTargetPosition.Value = localTransform.Position;
         }
       }
 
@@ -95,14 +94,14 @@ namespace Assets.Scripts.Entities.Player.Turret
     {
       state.CompleteDependency();
 
-      // Gather closest enemy
-      var closestEnemyJob = new GatherClosestEnemyJob
+      // Gather closest target
+      var closestTargetJob = new GatherClosestTargetJob
       {
         SourcePosition = float3.zero, // Assuming the turret is at the origin for this example
-        ClosestEnemyDistance = new NativeReference<float>(Allocator.TempJob) { Value = float.MaxValue },
-        ClosestEnemyPosition = new NativeReference<float3>(Allocator.TempJob) { Value = float3.zero }
+        ClosestTargetDistance = new NativeReference<float>(Allocator.TempJob) { Value = float.MaxValue },
+        ClosestTargetPosition = new NativeReference<float3>(Allocator.TempJob) { Value = float3.zero }
       };
-      closestEnemyJob.Run();
+      closestTargetJob.Run();
 
       // Update turret
       var inputData = SystemAPI.GetSingleton<InputState>();
@@ -110,7 +109,7 @@ namespace Assets.Scripts.Entities.Player.Turret
 
       new TurretUpdateJob
       {
-        TargetLookPosition = closestEnemyJob.ClosestEnemyPosition.Value,
+        TargetLookPosition = closestTargetJob.ClosestTargetPosition.Value,
         CurrentTime = SystemAPI.Time.ElapsedTime,
         DeltaTime = SystemAPI.Time.DeltaTime,
         BulletSpawnEvents = spawnEvents,
@@ -122,8 +121,8 @@ namespace Assets.Scripts.Entities.Player.Turret
       foreach (var e in spawnEvents)
         buffer.Add(e);
 
-      closestEnemyJob.ClosestEnemyDistance.Dispose();
-      closestEnemyJob.ClosestEnemyPosition.Dispose();
+      closestTargetJob.ClosestTargetDistance.Dispose();
+      closestTargetJob.ClosestTargetPosition.Dispose();
 
       spawnEvents.Dispose();
     }

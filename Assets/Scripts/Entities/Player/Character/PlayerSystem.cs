@@ -3,7 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
+using Unity.Physics;
 
 namespace Assets.Scripts.Entities.Player.Character
 {
@@ -21,8 +21,7 @@ namespace Assets.Scripts.Entities.Player.Character
 
       state.Dependency = new PlayerMovementJob
       {
-        MoveDirection = new NativeReference<float2>(moveDirection, Allocator.TempJob),
-        DeltaTime = new NativeReference<float>((float)SystemAPI.Time.DeltaTime, Allocator.TempJob)
+        MoveDirection = new NativeReference<float2>(moveDirection, Allocator.TempJob)
       }.Schedule(state.Dependency);
     }
 
@@ -30,15 +29,14 @@ namespace Assets.Scripts.Entities.Player.Character
     partial struct PlayerMovementJob : IJobEntity
     {
       public NativeReference<float2> MoveDirection;
-      public NativeReference<float> DeltaTime;
 
-      public void Execute(ref LocalTransform localTransform, in PlayerAttributes attributes)
+      public void Execute(ref PhysicsVelocity velocity, in PlayerAttributes attributes)
       {
         var dir = MoveDirection.Value;
         if (math.lengthsq(dir) > 0f)
           dir = math.normalize(dir);
 
-        localTransform.Position += new float3(attributes.MoveSpeed * DeltaTime.Value * dir, 0f);
+        velocity.Linear = new float3(attributes.MoveSpeed * dir, 0f);
       }
     }
   }
