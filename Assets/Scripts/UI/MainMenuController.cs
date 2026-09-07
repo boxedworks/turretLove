@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using Unity.Entities;
+using Assets.Scripts.Entities.Game;
 
 namespace Assets.Scripts.UI
 {
@@ -54,6 +56,7 @@ namespace Assets.Scripts.UI
     private void OnPlayClicked(ClickEvent clickEvent)
     {
       menuScreen.style.display = DisplayStyle.None;
+      StartGame();
     }
 
     private void OnOptionsClicked(ClickEvent clickEvent)
@@ -68,6 +71,19 @@ namespace Assets.Scripts.UI
 #else
       Application.Quit();
 #endif
+    }
+
+    private void StartGame()
+    {
+      // Get the default world and send LevelStart event
+      var world = World.DefaultGameObjectInjectionWorld;
+      if (world == null || !world.IsCreated)
+        return;
+
+      // Get the existing LevelState singleton created by LevelLifecycleSystem
+      var levelStateEntity = world.EntityManager.CreateEntityQuery(typeof(LevelState)).GetSingletonEntity();
+      var eventBuffer = world.EntityManager.GetBuffer<LevelEvent>(levelStateEntity);
+      eventBuffer.Add(new LevelEvent { Type = LevelEvent.EventType.LevelStart });
     }
   }
 }

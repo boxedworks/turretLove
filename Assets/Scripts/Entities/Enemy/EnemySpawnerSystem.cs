@@ -27,6 +27,13 @@ namespace Assets.Scripts.Entities.Enemy
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+      // Check level state - only spawn if level is running
+      if (!SystemAPI.TryGetSingleton<LevelState>(out var levelState))
+        return;
+
+      if (levelState.CurrentState != LevelState.State.Running)
+        return;
+
       var time = SystemAPI.Time.ElapsedTime;
       var rampProgress = math.saturate((float)(time / SpawnRampDuration));
       var spawnInterval = math.lerp((float)InitialSpawnInterval, (float)MinimumSpawnInterval, rampProgress);
@@ -48,6 +55,7 @@ namespace Assets.Scripts.Entities.Enemy
       var enemy = state.EntityManager.Instantiate(prefab);
       state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Type = enemyType, Health = health });
       state.EntityManager.AddComponentData(enemy, new ScrollComponent { Direction = new float2(-1f, 0f), Speed = 0.5f });
+      state.EntityManager.AddComponent<LevelEntity>(enemy);
       if (speed > 0f)
       {
         state.EntityManager.AddComponentData(enemy, new AttractToPlayer { Speed = speed });

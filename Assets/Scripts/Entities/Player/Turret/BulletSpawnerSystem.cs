@@ -1,4 +1,5 @@
 
+using Assets.Scripts.Entities.Game;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -34,6 +35,7 @@ namespace Assets.Scripts.Entities.Player.Turret
       {
         var bulletEntity = state.EntityManager.Instantiate(bulletSpawner.Prefab);
         state.EntityManager.AddComponent<Bullet>(bulletEntity);
+        state.EntityManager.AddComponent<LevelEntity>(bulletEntity);
 
         // For testing, set random rotation and velocity
         var spawnPosition = spawnEvent.SpawnPosition;

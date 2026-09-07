@@ -1,5 +1,6 @@
 
 using Assets.Scripts.Entities.Enemy;
+using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Game.Scroll;
 using Assets.Scripts.Entities.Loot.DropTables;
 using Unity.Collections;
@@ -80,6 +81,7 @@ namespace Assets.Scripts.Entities.Loot
               Scale = 1f,
               Rotation = quaternion.identity
             });
+            state.EntityManager.AddComponent<LevelEntity>(loot);
           }
         }
       }

@@ -34,7 +34,7 @@ namespace Assets.Scripts.Entities.Game
           // Roll loot tables
           LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
 
-          // Destroy entity using ecb; death event
+          // Death event
           if (simpleEnemy.Health <= 0f)
           {
             Ecb.DestroyEntity(entity);
