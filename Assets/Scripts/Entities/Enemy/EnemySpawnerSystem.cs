@@ -54,11 +54,12 @@ namespace Assets.Scripts.Entities.Enemy
 
       var enemy = state.EntityManager.Instantiate(prefab);
       state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Type = enemyType, Health = health });
+      state.EntityManager.AddComponentData(enemy, new ContactCooldown { NextAllowedContactTime = 0 });
       state.EntityManager.AddComponentData(enemy, new ScrollComponent { Direction = new float2(-1f, 0f), Speed = 0.5f });
       state.EntityManager.AddComponent<LevelEntity>(enemy);
       if (speed > 0f)
       {
-        state.EntityManager.AddComponentData(enemy, new AttractToPlayer { Speed = speed });
+        state.EntityManager.AddComponentData(enemy, new AttractToPlayer { Speed = speed * 5f });
         state.EntityManager.AddComponent<TurretTargetable>(enemy);
       }
       state.EntityManager.AddBuffer<DamageEvent>(enemy);
@@ -107,7 +108,7 @@ namespace Assets.Scripts.Entities.Enemy
       var collider = physicsCollider.ValueRO.Value;
       var filter = collider.Value.GetCollisionFilter();
       filter.BelongsTo = 1 << 4;
-      filter.CollidesWith = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4);
+      filter.CollidesWith = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4) | (1 << 6);
       collider.Value.SetCollisionFilter(filter);
       physicsCollider.ValueRW.Value = collider;
 

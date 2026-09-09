@@ -1,5 +1,6 @@
 
 using Assets.Scripts.Entities.Game;
+using Assets.Scripts.Entities.Game.Scroll;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -9,6 +10,7 @@ using Unity.Transforms;
 namespace Assets.Scripts.Entities.Player.Turret
 {
 
+  [UpdateBefore(typeof(TransformSystemGroup))]
   public partial struct BulletSpawnerSystem : ISystem
   {
     public readonly void OnCreate(ref SystemState state)
@@ -36,11 +38,12 @@ namespace Assets.Scripts.Entities.Player.Turret
         var bulletEntity = state.EntityManager.Instantiate(bulletSpawner.Prefab);
         state.EntityManager.AddComponent<Bullet>(bulletEntity);
         state.EntityManager.AddComponent<LevelEntity>(bulletEntity);
+        state.EntityManager.AddComponent<ScrollComponent>(bulletEntity);
 
         // For testing, set random rotation and velocity
         var spawnPosition = spawnEvent.SpawnPosition;
         var rotation = spawnEvent.SpawnRotation;
-        var scale = 0.5f;
+        var scale = 0.25f;
 
         // Set position, rotation and scale
         state.EntityManager.SetComponentData(bulletEntity, LocalTransform.FromPositionRotationScale(spawnPosition, rotation, scale));

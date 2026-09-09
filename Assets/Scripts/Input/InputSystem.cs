@@ -1,5 +1,6 @@
 
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,10 +32,33 @@ namespace Assets.Scripts.Input
       // Set state
       inputState.ValueRW.MouseWorldPosition = mouseWorldPosition;
       inputState.ValueRW.Mouse1Down = mouse1Down;
-      inputState.ValueRW.ArrowUpDown = keyboard.upArrowKey.isPressed;
-      inputState.ValueRW.ArrowDownDown = keyboard.downArrowKey.isPressed;
-      inputState.ValueRW.ArrowLeftDown = keyboard.leftArrowKey.isPressed;
-      inputState.ValueRW.ArrowRightDown = keyboard.rightArrowKey.isPressed;
+      var arrowUpState = GetButtonState(keyboard.upArrowKey.isPressed, inputState.ValueRO.ArrowUpState);
+      var arrowDownState = GetButtonState(keyboard.downArrowKey.isPressed, inputState.ValueRO.ArrowDownState);
+      var arrowLeftState = GetButtonState(keyboard.leftArrowKey.isPressed, inputState.ValueRO.ArrowLeftState);
+      var arrowRightState = GetButtonState(keyboard.rightArrowKey.isPressed, inputState.ValueRO.ArrowRightState);
+
+      inputState.ValueRW.ArrowReleaseDirection = new float2(
+        (arrowRightState == InputButtonState.Released ? 1f : 0f) -
+        (arrowLeftState == InputButtonState.Released ? 1f : 0f),
+        (arrowUpState == InputButtonState.Released ? 1f : 0f) -
+        (arrowDownState == InputButtonState.Released ? 1f : 0f)
+      );
+      inputState.ValueRW.ArrowUpState = arrowUpState;
+      inputState.ValueRW.ArrowDownState = arrowDownState;
+      inputState.ValueRW.ArrowLeftState = arrowLeftState;
+      inputState.ValueRW.ArrowRightState = arrowRightState;
+    }
+
+    private static InputButtonState GetButtonState(bool isPressed, InputButtonState previousState)
+    {
+      if (isPressed)
+        return previousState == InputButtonState.None || previousState == InputButtonState.Released
+          ? InputButtonState.Pressed
+          : InputButtonState.Held;
+
+      return previousState == InputButtonState.Pressed || previousState == InputButtonState.Held
+        ? InputButtonState.Released
+        : InputButtonState.None;
     }
   }
 }

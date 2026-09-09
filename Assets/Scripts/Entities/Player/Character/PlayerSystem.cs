@@ -1,44 +1,39 @@
 using Assets.Scripts.Input;
-using Unity.Burst;
-using Unity.Collections;
+using Assets.Scripts.Entities.Skills;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Physics;
 
 namespace Assets.Scripts.Entities.Player.Character
 {
+  [UpdateBefore(typeof(SkillSystem))]
   public partial struct PlayerSystem : ISystem
   {
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    public readonly void OnCreate(ref SystemState state)
     {
-      var inputState = SystemAPI.GetSingleton<InputState>();
-
-      var moveDirection = new float2(
-        (inputState.ArrowRightDown ? 1f : 0f) - (inputState.ArrowLeftDown ? 1f : 0f),
-        (inputState.ArrowUpDown ? 1f : 0f) - (inputState.ArrowDownDown ? 1f : 0f)
-      );
-
-      state.Dependency = new PlayerMovementJob
-      {
-        MoveDirection = new NativeReference<float2>(moveDirection, Allocator.TempJob)
-      }.Schedule(state.Dependency);
+      state.RequireForUpdate<InputState>();
+      state.RequireForUpdate<PlayerAttributes>();
+      state.RequireForUpdate<SkillTriggerEvent>();
     }
 
-    [BurstCompile]
-    [WithNone(typeof(PlayerDefeated))]
-    partial struct PlayerMovementJob : IJobEntity
+    public void OnUpdate(ref SystemState state)
     {
-      public NativeReference<float2> MoveDirection;
+      TryTriggerDash(ref state);
+    }
 
-      public void Execute(ref PhysicsVelocity velocity, in PlayerAttributes attributes)
-      {
-        var dir = MoveDirection.Value;
-        if (math.lengthsq(dir) > 0f)
-          dir = math.normalize(dir);
+    private void TryTriggerDash(ref SystemState state)
+    {
+      var direction = SystemAPI.GetSingleton<InputState>().ArrowReleaseDirection;
+      if (math.lengthsq(direction) == 0f)
+        return;
 
-        velocity.Linear = new float3(attributes.MoveSpeed * dir, 0f);
-      }
+      var player = SystemAPI.GetSingletonEntity<PlayerAttributes>();
+      if (SystemAPI.HasComponent<PlayerDefeated>(player))
+        return;
+
+      SkillTriggerEvent.Trigger(
+        SystemAPI.GetBuffer<SkillTriggerEvent>(player),
+        SkillType.Dash,
+        direction);
     }
   }
 }

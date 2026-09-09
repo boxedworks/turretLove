@@ -19,4 +19,10 @@ namespace Assets.Scripts.Entities.Enemy
 
     public float Health;
   }
+
+  // Tracks when an enemy is next allowed to deal contact damage, to debounce collision events spanning multiple frames.
+  public struct ContactCooldown : IComponentData
+  {
+    public double NextAllowedContactTime;
+  }
 }
