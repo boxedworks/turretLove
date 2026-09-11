@@ -60,7 +60,7 @@ namespace Assets.Scripts.Entities.Game
     {
       // Spawn player
       var playerSpawner = SystemAPI.GetSingleton<PlayerSpawner>();
-      var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
+      var ecb = new EntityCommandBuffer(Allocator.Temp);
 
       var player = ecb.Instantiate(playerSpawner.PlayerPrefab);
       ecb.SetComponent(player, LocalTransform.FromPositionRotationScale(new float3(1f, 0f, 0f), quaternion.identity, 0.5f));
@@ -72,57 +72,71 @@ namespace Assets.Scripts.Entities.Game
         AttackSpeed = 1f
       });
       ecb.AddBuffer<DamageEvent>(player);
+      ecb.AddComponent(player, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
       ecb.AddBuffer<KnockbackEvent>(player);
       var skills = ecb.AddBuffer<Skill>(player);
       skills.Add(new Skill
       {
         Type = SkillType.Dash,
+        ActivationType = SkillActivationType.Release,
         MaxUses = 2,
         RemainingUses = 2,
         EffectStrength = 4f,
-        RechargeDuration = 1f
+        RechargeDuration = 1f,
+        ChargeDuration = 0.25f
+      });
+      skills.Add(new Skill
+      {
+        Type = SkillType.Halt,
+        ActivationType = SkillActivationType.Held,
+        MaxUses = 30,
+        RemainingUses = 30,
+        EffectStrength = 0.05f,
+        RechargeDuration = 0.1f
       });
       ecb.AddBuffer<SkillTriggerEvent>(player);
-      ecb.AddComponent(player, new LevelEntity());
-
-      ecb.Playback(state.EntityManager);
-      ecb.Dispose();
+      ecb.AddComponent(player, new LevelEntity { Type = LevelEntityType.Player });
 
       // Spawn turret
       var turretSpawner = SystemAPI.GetSingleton<TurretSpawner>();
-      var turretTopInstance = state.EntityManager.Instantiate(turretSpawner.TurretTopPrefab);
-      var turretBaseInstance = state.EntityManager.Instantiate(turretSpawner.TurretBasePrefab);
+      var turretTopInstance = ecb.Instantiate(turretSpawner.TurretTopPrefab);
+      var turretBaseInstance = ecb.Instantiate(turretSpawner.TurretBasePrefab);
 
-      state.EntityManager.AddComponent<TurretTop>(turretTopInstance);
-      state.EntityManager.AddComponentData(turretTopInstance, new TurretAttributes
+      ecb.AddComponent(turretBaseInstance, new TurretAttributes
       {
+        TurretTopEntity = turretTopInstance,
         RotationSpeed = 1f,
         FireRate = 0.5f,
         TimeSinceLastShot = 0f
       });
-      state.EntityManager.AddComponent<TurretBase>(turretBaseInstance);
-      state.EntityManager.AddComponentData(turretBaseInstance, new TurretHealth
+      ecb.AddComponent(turretBaseInstance, new TurretHealth
       {
         MaxHealth = 100f,
         CurrentHealth = 100f
       });
-      state.EntityManager.AddBuffer<DamageEvent>(turretBaseInstance);
-      state.EntityManager.AddComponent<LevelEntity>(turretBaseInstance);
-      state.EntityManager.AddComponent<LevelEntity>(turretTopInstance);
+      ecb.AddBuffer<DamageEvent>(turretBaseInstance);
+      ecb.AddComponent(turretBaseInstance, new LevelEntity { Type = LevelEntityType.Turret });
+      ecb.AddComponent(turretTopInstance, new LevelEntity { Type = LevelEntityType.Turret });
+      ecb.AddComponent(turretBaseInstance, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
+      ecb.AddComponent(turretTopInstance, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
 
       // Set initial position of turret
       var turretPosition = float3.zero;
-      state.EntityManager.SetComponentData(turretTopInstance, LocalTransform.FromPositionRotationScale(turretPosition + new float3(0, 0, -0.1f), quaternion.identity, 0.5f));
-      state.EntityManager.SetComponentData(turretBaseInstance, LocalTransform.FromPositionRotationScale(turretPosition, quaternion.identity, 0.5f));
+      ecb.SetComponent(turretTopInstance, LocalTransform.FromPositionRotationScale(turretPosition + new float3(0, 0, -0.1f), quaternion.identity, 0.5f));
+      ecb.SetComponent(turretBaseInstance, LocalTransform.FromPositionRotationScale(turretPosition, quaternion.identity, 0.5f));
 
       // Change collision layer to avoid colliding with the bullet
-      var physicsCollider = SystemAPI.GetComponentRW<PhysicsCollider>(turretBaseInstance);
-      var collider = physicsCollider.ValueRO.Value;
+      var physicsCollider = SystemAPI.GetComponent<PhysicsCollider>(turretSpawner.TurretBasePrefab);
+      var collider = physicsCollider.Value;
       var filter = collider.Value.GetCollisionFilter();
       filter.BelongsTo = 1 << 1;
       filter.CollidesWith = (1 << 0) | (1 << 4) | (1 << 6);
       collider.Value.SetCollisionFilter(filter);
-      physicsCollider.ValueRW.Value = collider;
+      physicsCollider.Value = collider;
+      ecb.SetComponent(turretBaseInstance, physicsCollider);
+
+      ecb.Playback(state.EntityManager);
+      ecb.Dispose();
     }
   }
 }

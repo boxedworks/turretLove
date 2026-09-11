@@ -24,11 +24,14 @@ namespace Assets.Scripts.Entities.Player.Turret
       public NativeList<BulletSpawnEvent> BulletSpawnEvents;
 
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
+      public ComponentLookup<LocalTransform> LocalTransformLookup;
 
-      public readonly void Execute(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
+      public void Execute(ref TurretAttributes turretAttributes)
       {
-        RotateTurret(ref turretAttributes, ref localTransform);
-        HandleBullet(ref turretAttributes, localTransform);
+        var turretTopTransform = LocalTransformLookup[turretAttributes.TurretTopEntity];
+        RotateTurret(ref turretAttributes, ref turretTopTransform);
+        HandleBullet(ref turretAttributes, turretTopTransform);
+        LocalTransformLookup[turretAttributes.TurretTopEntity] = turretTopTransform;
       }
 
       readonly void RotateTurret(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
@@ -95,6 +98,9 @@ namespace Assets.Scripts.Entities.Player.Turret
     {
       state.CompleteDependency();
 
+      if (SystemAPI.HasSingleton<TurretDefeated>())
+        return;
+
       // Gather closest target
       var closestTargetJob = new GatherClosestTargetJob
       {
@@ -115,7 +121,8 @@ namespace Assets.Scripts.Entities.Player.Turret
         DeltaTime = SystemAPI.Time.DeltaTime,
         BulletSpawnEvents = spawnEvents,
 
-        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>()
+        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>(),
+        LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>()
       }.Run();
 
       var buffer = SystemAPI.GetSingletonBuffer<BulletSpawnEvent>();

@@ -1,15 +1,15 @@
 
-using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game.Audio;
+using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Loot;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-namespace Assets.Scripts.Entities.Game
+namespace Assets.Scripts.Entities.Enemy
 {
-  public partial struct DamageSystem : ISystem
+  public partial struct EnemyDamageSystem : ISystem
   {
     [BurstCompile]
     partial struct DamageJob : IJobEntity
@@ -20,7 +20,7 @@ namespace Assets.Scripts.Entities.Game
 
       public Random Random;
 
-      public readonly void Execute(Entity entity, ref SimpleEnemy simpleEnemy, LocalTransform transform, ref DynamicBuffer<DamageEvent> damageBuffer)
+      public readonly void Execute(Entity entity, ref SimpleEnemy simpleEnemy, in LocalTransform transform, ref DynamicBuffer<DamageEvent> damageBuffer)
       {
         if (damageBuffer.Length > 0)
         {
@@ -50,7 +50,7 @@ namespace Assets.Scripts.Entities.Game
           else
           {
 
-            // Add blink effect for enemy death
+            // Add blink effect for enemy damage
             Ecb.AddComponent(entity, new BlinkEffect
             {
               Rate = 0.1f,
@@ -79,11 +79,5 @@ namespace Assets.Scripts.Entities.Game
       }
         .Schedule(state.Dependency);
     }
-  }
-
-  public partial struct DamageEvent : IBufferElementData
-  {
-    public float3 DamagePosition;
-    public float DamageAmount;
   }
 }

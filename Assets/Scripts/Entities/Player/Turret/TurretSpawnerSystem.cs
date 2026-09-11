@@ -11,11 +11,4 @@ namespace Assets.Scripts.Entities.Player.Turret
   {
     public float3 SpawnPosition;
   }
-
-  public partial struct TurretTop : IComponentData
-  {
-  }
-  public partial struct TurretBase : IComponentData
-  {
-  }
 }

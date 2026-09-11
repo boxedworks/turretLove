@@ -23,6 +23,13 @@ namespace Assets.Scripts.Entities.Player.Character
           totalDamage += damageEvent.DamageAmount;
         damageEvents.Clear();
 
+        Ecb.AddComponent(entityIndex, entity, new BlinkEffect
+        {
+          Rate = 0.1f,
+          BlinkColor = new float4(1f, 0f, 0f, 1f),
+          BlinkCount = 6,
+        });
+
         attributes.CurrentHealth = math.max(0f, attributes.CurrentHealth - totalDamage);
         if (attributes.CurrentHealth == 0f)
           Ecb.AddComponent<PlayerDefeated>(entityIndex, entity);

@@ -3,7 +3,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Extensions;
-using Unity.Transforms;
 
 namespace Assets.Scripts.Entities.Skills
 {
@@ -18,13 +17,27 @@ namespace Assets.Scripts.Entities.Skills
         ref DynamicBuffer<Skill> skills,
         ref DynamicBuffer<SkillTriggerEvent> triggerEvents,
         ref PhysicsVelocity velocity,
-        in PhysicsMass mass,
-        in LocalTransform transform)
+        in PhysicsMass mass)
       {
         for (var skillIndex = 0; skillIndex < skills.Length; skillIndex++)
         {
           var skill = skills[skillIndex];
-          Recharge(ref skill);
+          if (skill.IsCharging)
+          {
+            skill.ChargeElapsed += DeltaTime;
+            if (skill.ChargeDuration <= 0f || skill.ChargeElapsed >= skill.ChargeDuration)
+            {
+              Fire(ref velocity, mass, skill, skill.ChargeDirection);
+              skill.IsCharging = false;
+              skill.ChargeElapsed = 0f;
+              skill.RechargeElapsed = 0f;
+            }
+          }
+          else
+          {
+            Recharge(ref skill);
+          }
+
           skills[skillIndex] = skill;
         }
 
@@ -33,22 +46,39 @@ namespace Assets.Scripts.Entities.Skills
           for (var skillIndex = 0; skillIndex < skills.Length; skillIndex++)
           {
             var skill = skills[skillIndex];
-            if (skill.Type != triggerEvent.Type || skill.RemainingUses <= 0)
+            if (skill.Type != triggerEvent.Type)
               continue;
 
-            if (skill.Type == SkillType.Dash && math.lengthsq(triggerEvent.Direction) > 0f)
+            if (skill.IsCharging)
             {
-              velocity.Linear = float3.zero;
-              velocity.ApplyImpulse(
-                mass,
-                transform.Position,
-                transform.Rotation,
-                new float3(math.normalize(triggerEvent.Direction) * skill.EffectStrength, 0f),
-                transform.Position);
+              if (CanFire(skill, triggerEvent.Direction))
+              {
+                if (triggerEvent.Direction.x != 0f)
+                  skill.ChargeDirection.x = triggerEvent.Direction.x;
+                if (triggerEvent.Direction.y != 0f)
+                  skill.ChargeDirection.y = triggerEvent.Direction.y;
+                skills[skillIndex] = skill;
+              }
+
+              break;
             }
+
+            if (skill.RemainingUses <= 0 || !CanFire(skill, triggerEvent.Direction))
+              break;
 
             skill.RemainingUses--;
             skill.RechargeElapsed = 0f;
+            if (skill.ChargeDuration > 0f)
+            {
+              skill.IsCharging = true;
+              skill.ChargeElapsed = 0f;
+              skill.ChargeDirection = triggerEvent.Direction;
+            }
+            else
+            {
+              Fire(ref velocity, mass, skill, triggerEvent.Direction);
+            }
+
             skills[skillIndex] = skill;
 
             break;
@@ -56,6 +86,20 @@ namespace Assets.Scripts.Entities.Skills
         }
 
         triggerEvents.Clear();
+      }
+
+      private static bool CanFire(in Skill skill, float2 direction)
+      {
+        return skill.Type == SkillType.Halt ||
+          (skill.Type == SkillType.Dash && math.lengthsq(direction) > 0f);
+      }
+
+      private static void Fire(ref PhysicsVelocity velocity, in PhysicsMass mass, in Skill skill, float2 direction)
+      {
+        if (skill.Type == SkillType.Dash && math.lengthsq(direction) > 0f)
+          velocity.ApplyLinearImpulse(mass, new float3(math.normalize(direction) * skill.EffectStrength, 0f));
+        else if (skill.Type == SkillType.Halt)
+          velocity.Linear = math.lerp(velocity.Linear, float3.zero, math.saturate(skill.EffectStrength));
       }
 
       private readonly void Recharge(ref Skill skill)

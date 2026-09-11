@@ -81,7 +81,7 @@ namespace Assets.Scripts.Entities.Loot
               Scale = 1f,
               Rotation = quaternion.identity
             });
-            state.EntityManager.AddComponent<LevelEntity>(loot);
+            state.EntityManager.AddComponentData(loot, new LevelEntity { Type = LevelEntityType.Loot });
           }
         }
       }

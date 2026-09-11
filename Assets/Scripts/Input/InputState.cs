@@ -20,6 +20,7 @@ namespace Assets.Scripts.Input
     public InputButtonState ArrowDownState;
     public InputButtonState ArrowLeftState;
     public InputButtonState ArrowRightState;
+    public InputButtonState SpaceState;
     public float2 ArrowReleaseDirection;
   }
 }

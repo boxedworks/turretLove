@@ -1,4 +1,4 @@
-using Assets.Scripts.Entities.Enemy;
+using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Player.Character;
 using Assets.Scripts.Entities.Player.Turret;
 using Unity.Burst;
@@ -9,7 +9,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 
-namespace Assets.Scripts.Entities.Game
+namespace Assets.Scripts.Entities.Enemy
 {
   [UpdateInGroup(typeof(PhysicsSystemGroup))]
   [UpdateAfter(typeof(PhysicsSimulationGroup))]
@@ -19,16 +19,15 @@ namespace Assets.Scripts.Entities.Game
     private const float ContactKnockbackForce = 5f;
     private const double ContactCooldownDuration = 0.02;
 
-    public void OnCreate(ref SystemState state)
+    public readonly void OnCreate(ref SystemState state)
     {
       state.RequireForUpdate<SimulationSingleton>();
     }
 
+    [BurstCompile]
     partial struct EnemyContactDamageJob : ICollisionEventsJob
     {
-      [ReadOnly] public ComponentLookup<SimpleEnemy> EnemyLookup;
-      [ReadOnly] public ComponentLookup<PlayerAttributes> PlayerLookup;
-      [ReadOnly] public ComponentLookup<TurretBase> TurretBaseLookup;
+      [ReadOnly] public ComponentLookup<LevelEntity> LevelEntityLookup;
       [ReadOnly] public ComponentLookup<PlayerDefeated> PlayerDefeatedLookup;
       [ReadOnly] public ComponentLookup<TurretDefeated> TurretDefeatedLookup;
       [ReadOnly] public ComponentLookup<LocalTransform> LocalTransformLookup;
@@ -45,20 +44,23 @@ namespace Assets.Scripts.Entities.Game
 
       void HandleContact(Entity enemyEntity, Entity targetEntity)
       {
-        if (!EnemyLookup.HasComponent(enemyEntity))
+        if (!LevelEntityLookup.TryGetComponent(enemyEntity, out var enemy)
+          || enemy.Type != LevelEntityType.Enemy)
         {
           return;
         }
 
-        var isPlayer = PlayerLookup.HasComponent(targetEntity);
-        var isTurretBase = TurretBaseLookup.HasComponent(targetEntity);
-        if (!isPlayer && !isTurretBase)
+        if (!LevelEntityLookup.TryGetComponent(targetEntity, out var target)
+          || (target.Type != LevelEntityType.Player && target.Type != LevelEntityType.Turret))
         {
           return;
         }
 
-        if ((isPlayer && PlayerDefeatedLookup.HasComponent(targetEntity))
-          || (isTurretBase && TurretDefeatedLookup.HasComponent(targetEntity)))
+        if ((target.Type == LevelEntityType.Player && PlayerDefeatedLookup.HasComponent(targetEntity))
+          || (target.Type == LevelEntityType.Turret && TurretDefeatedLookup.HasComponent(targetEntity)))
+          return;
+
+        if (!DamageEventLookup.HasBuffer(targetEntity) || !KnockbackEventLookup.HasBuffer(enemyEntity))
           return;
 
         if (ContactCooldownLookup.HasComponent(enemyEntity))
@@ -86,13 +88,12 @@ namespace Assets.Scripts.Entities.Game
       }
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
       state.Dependency = new EnemyContactDamageJob
       {
-        EnemyLookup = SystemAPI.GetComponentLookup<SimpleEnemy>(true),
-        PlayerLookup = SystemAPI.GetComponentLookup<PlayerAttributes>(true),
-        TurretBaseLookup = SystemAPI.GetComponentLookup<TurretBase>(true),
+        LevelEntityLookup = SystemAPI.GetComponentLookup<LevelEntity>(true),
         PlayerDefeatedLookup = SystemAPI.GetComponentLookup<PlayerDefeated>(true),
         TurretDefeatedLookup = SystemAPI.GetComponentLookup<TurretDefeated>(true),
         LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),

@@ -54,9 +54,10 @@ namespace Assets.Scripts.Entities.Enemy
 
       var enemy = state.EntityManager.Instantiate(prefab);
       state.EntityManager.AddComponentData(enemy, new SimpleEnemy { Type = enemyType, Health = health });
-      state.EntityManager.AddComponentData(enemy, new ContactCooldown { NextAllowedContactTime = 0 });
       state.EntityManager.AddComponentData(enemy, new ScrollComponent { Direction = new float2(-1f, 0f), Speed = 0.5f });
-      state.EntityManager.AddComponent<LevelEntity>(enemy);
+      state.EntityManager.AddComponentData(enemy, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
+      state.EntityManager.AddComponentData(enemy, new ContactCooldown { NextAllowedContactTime = 0 });
+      state.EntityManager.AddComponentData(enemy, new LevelEntity { Type = LevelEntityType.Enemy });
       if (speed > 0f)
       {
         state.EntityManager.AddComponentData(enemy, new AttractToPlayer { Speed = speed * 5f });
@@ -111,9 +112,6 @@ namespace Assets.Scripts.Entities.Enemy
       filter.CollidesWith = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4) | (1 << 6);
       collider.Value.SetCollisionFilter(filter);
       physicsCollider.ValueRW.Value = collider;
-
-      // Add material override
-      state.EntityManager.AddComponentData(enemy, new ColorOverride { Value = new float4(1f, 1f, 1f, 1f) });
     }
 
     private static void GetEnemyStats(EnemyType enemyType, out float health, out float speed, out float mass, out float scale)

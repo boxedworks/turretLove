@@ -36,17 +36,19 @@ namespace Assets.Scripts.Input
       var arrowDownState = GetButtonState(keyboard.downArrowKey.isPressed, inputState.ValueRO.ArrowDownState);
       var arrowLeftState = GetButtonState(keyboard.leftArrowKey.isPressed, inputState.ValueRO.ArrowLeftState);
       var arrowRightState = GetButtonState(keyboard.rightArrowKey.isPressed, inputState.ValueRO.ArrowRightState);
+      var spaceState = GetButtonState(keyboard.spaceKey.isPressed, inputState.ValueRO.SpaceState);
 
       inputState.ValueRW.ArrowReleaseDirection = new float2(
-        (arrowRightState == InputButtonState.Released ? 1f : 0f) -
-        (arrowLeftState == InputButtonState.Released ? 1f : 0f),
-        (arrowUpState == InputButtonState.Released ? 1f : 0f) -
-        (arrowDownState == InputButtonState.Released ? 1f : 0f)
-      );
+          (arrowRightState == InputButtonState.Released ? 1f : 0f) -
+          (arrowLeftState == InputButtonState.Released ? 1f : 0f),
+          (arrowUpState == InputButtonState.Released ? 1f : 0f) -
+          (arrowDownState == InputButtonState.Released ? 1f : 0f)
+        );
       inputState.ValueRW.ArrowUpState = arrowUpState;
       inputState.ValueRW.ArrowDownState = arrowDownState;
       inputState.ValueRW.ArrowLeftState = arrowLeftState;
       inputState.ValueRW.ArrowRightState = arrowRightState;
+      inputState.ValueRW.SpaceState = spaceState;
     }
 
     private static InputButtonState GetButtonState(bool isPressed, InputButtonState previousState)

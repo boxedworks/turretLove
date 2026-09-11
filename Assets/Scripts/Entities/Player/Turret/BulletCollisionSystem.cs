@@ -25,7 +25,6 @@ namespace Assets.Scripts.Entities.Player.Turret
       [ReadOnly] public ComponentLookup<LocalTransform> LocalTransformLookup;
       [ReadOnly] public ComponentLookup<Bullet> BulletLookup;
       [ReadOnly] public ComponentLookup<SimpleEnemy> EnemyLookup;
-      [ReadOnly] public ComponentLookup<TurretTop> TurretTopLookup;
       public BufferLookup<DamageEvent> DamageEventLookup;
       public BufferLookup<KnockbackEvent> KnockbackEventLookup;
 
@@ -48,10 +47,6 @@ namespace Assets.Scripts.Entities.Player.Turret
         // var isEnemyCollision = EnemyLookup.HasComponent(entityA) || EnemyLookup.HasComponent(entityB);
         // if (!isEnemyCollision)
         //   return;
-
-        var isTurretCollision = TurretTopLookup.HasComponent(entityA) || TurretTopLookup.HasComponent(entityB);
-        if (isTurretCollision)
-          return;
 
         // Destroy any bullet that collides with something
         if (isEntityABullet)
@@ -107,7 +102,6 @@ namespace Assets.Scripts.Entities.Player.Turret
           LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
           BulletLookup = SystemAPI.GetComponentLookup<Bullet>(true),
           EnemyLookup = SystemAPI.GetComponentLookup<SimpleEnemy>(true),
-          TurretTopLookup = SystemAPI.GetComponentLookup<TurretTop>(true),
 
           DamageEventLookup = SystemAPI.GetBufferLookup<DamageEvent>(),
           KnockbackEventLookup = SystemAPI.GetBufferLookup<KnockbackEvent>()
