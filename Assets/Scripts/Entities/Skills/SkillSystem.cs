@@ -116,6 +116,7 @@ namespace Assets.Scripts.Entities.Skills
           if (ammo.CurrentAmmo <= 0)
           {
             ammo.CurrentAmmo = ammo.MagazineSize;
+            ammo.CurrentSlotIndex = 0;
             TurretAmmoLookup[skill.TargetEntity] = ammo;
           }
         }

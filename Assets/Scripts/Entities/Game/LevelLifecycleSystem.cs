@@ -19,7 +19,12 @@ namespace Assets.Scripts.Entities.Game
     {
       // Create the LevelState singleton if it doesn't exist
       var levelStateEntity = state.EntityManager.CreateEntity();
-      state.EntityManager.AddComponentData(levelStateEntity, new LevelState { CurrentState = LevelState.State.Inactive });
+      state.EntityManager.AddComponentData(levelStateEntity, new LevelState
+      {
+        CurrentState = LevelState.State.Inactive,
+        SelectedAreaIndex = 0,
+        SelectedLevelIndex = 0
+      });
       state.EntityManager.AddBuffer<LevelEvent>(levelStateEntity);
 
       state.RequireForUpdate<PlayerSpawner>();
@@ -44,6 +49,8 @@ namespace Assets.Scripts.Entities.Game
           if (levelStateRef.ValueRO.CurrentState != LevelState.State.Running)
           {
             levelStateRef.ValueRW.CurrentState = LevelState.State.Running;
+            levelStateRef.ValueRW.SelectedAreaIndex = levelEvent.AreaIndex;
+            levelStateRef.ValueRW.SelectedLevelIndex = levelEvent.LevelIndex;
             SpawnPlayerAndTurret(ref state);
           }
         }
@@ -126,8 +133,11 @@ namespace Assets.Scripts.Entities.Game
       ecb.AddComponent(turretBaseInstance, new TurretAmmo
       {
         MagazineSize = 4,
-        CurrentAmmo = 4
+        CurrentAmmo = 4,
+        CurrentSlotIndex = 0,
+        LoadoutRevision = 0
       });
+      ecb.AddBuffer<TurretMagazineSlot>(turretBaseInstance);
       ecb.AddBuffer<DamageEvent>(turretBaseInstance);
       ecb.AddComponent(turretBaseInstance, new LevelEntity { Type = LevelEntityType.Turret });
       ecb.AddComponent(turretTopInstance, new LevelEntity { Type = LevelEntityType.Turret });

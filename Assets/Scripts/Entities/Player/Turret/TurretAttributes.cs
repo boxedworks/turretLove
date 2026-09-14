@@ -17,5 +17,7 @@ namespace Assets.Scripts.Entities.Player.Turret
   {
     public int CurrentAmmo;
     public int MagazineSize;
+    public int CurrentSlotIndex;
+    public int LoadoutRevision;
   }
 }

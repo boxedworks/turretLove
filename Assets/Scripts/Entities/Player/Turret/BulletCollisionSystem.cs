@@ -1,5 +1,3 @@
-
-using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game;
 using Unity.Burst;
 using Unity.Collections;
@@ -11,102 +9,94 @@ using Unity.Transforms;
 
 namespace Assets.Scripts.Entities.Player.Turret
 {
-
   [UpdateInGroup(typeof(PhysicsSystemGroup))]
   [UpdateAfter(typeof(PhysicsSimulationGroup))]
   public partial struct BulletCollisionSystem : ISystem
   {
-
     [BurstCompile]
-    public partial struct BulletCollisionJob : ITriggerEventsJob
+    private struct BulletCollisionJob : ITriggerEventsJob
     {
       public EntityCommandBuffer.ParallelWriter Ecb;
-
       [ReadOnly] public ComponentLookup<LocalTransform> LocalTransformLookup;
       [ReadOnly] public ComponentLookup<Bullet> BulletLookup;
-      [ReadOnly] public ComponentLookup<SimpleEnemy> EnemyLookup;
+      [ReadOnly] public ComponentLookup<LevelEntity> LevelEntityLookup;
       public BufferLookup<DamageEvent> DamageEventLookup;
       public BufferLookup<KnockbackEvent> KnockbackEventLookup;
 
-      // Check if either entity in the trigger event is a bullet, and if so, handle the collision accordingly
-      // If bullet collides with something, destroy the bullet and add a collision event to the other entity
       public void Execute(TriggerEvent triggerEvent)
       {
-
         var entityA = triggerEvent.EntityA;
         var entityB = triggerEvent.EntityB;
-
-        // Gather entity types
-        var isEntityABullet = BulletLookup.HasComponent(entityA);
-        var isEntityBBullet = BulletLookup.HasComponent(entityB);
-
-        var isBulletCollision = isEntityABullet || isEntityBBullet;
-        if (!isBulletCollision)
+        var isBulletA = BulletLookup.HasComponent(entityA);
+        var isBulletB = BulletLookup.HasComponent(entityB);
+        if (!isBulletA && !isBulletB)
+          return;
+        if (isBulletA && isBulletB)
           return;
 
-        // var isEnemyCollision = EnemyLookup.HasComponent(entityA) || EnemyLookup.HasComponent(entityB);
-        // if (!isEnemyCollision)
-        //   return;
+        if (isBulletA)
+        {
+          Ecb.DestroyEntity(triggerEvent.BodyIndexA, entityA);
+          if (!isBulletB)
+            DamageTarget(entityB, entityA);
+        }
 
-        // Destroy any bullet that collides with something
-        if (isEntityABullet)
-          HandleCollisionAsBullet(triggerEvent.BodyIndexA, entityA);
-        else
-          HandleCollisionAsNonBullet(triggerEvent.BodyIndexA, entityA, LocalTransformLookup[entityB].Position, LocalTransformLookup[entityA]);
-
-        if (isEntityBBullet)
-          HandleCollisionAsBullet(triggerEvent.BodyIndexB, entityB);
-        else
-          HandleCollisionAsNonBullet(triggerEvent.BodyIndexB, entityB, LocalTransformLookup[entityA].Position, LocalTransformLookup[entityB]);
+        if (isBulletB)
+        {
+          Ecb.DestroyEntity(triggerEvent.BodyIndexB, entityB);
+          if (!isBulletA)
+            DamageTarget(entityA, entityB);
+        }
       }
 
-      // If a bullet collides with something, destroy the bullet
-      void HandleCollisionAsBullet(int entityIndex, Entity bulletEntity)
+      private void DamageTarget(Entity targetEntity, Entity bulletEntity)
       {
-        Ecb.DestroyEntity(entityIndex, bulletEntity);
-      }
-
-      // If a bullet collides with a non-bullet entity, add a collision event to that entity's buffer
-      void HandleCollisionAsNonBullet(int entityIndex, Entity nonBulletEntity, float3 bulletPosition, LocalTransform transform)
-      {
-        if (!DamageEventLookup.HasBuffer(nonBulletEntity))
+        if (!LevelEntityLookup.TryGetComponent(targetEntity, out var target)
+          || target.Type != LevelEntityType.Enemy
+          || !DamageEventLookup.HasBuffer(targetEntity))
           return;
-        var damageEventBuffer = DamageEventLookup[nonBulletEntity];
-        damageEventBuffer.Add(new DamageEvent()
+
+        var bullet = BulletLookup[bulletEntity];
+        var stats = bullet.Payload.Stats;
+        var bulletPosition = LocalTransformLookup.HasComponent(bulletEntity)
+          ? LocalTransformLookup[bulletEntity].Position
+          : float3.zero;
+        DamageEventLookup[targetEntity].Add(new DamageEvent
         {
           DamagePosition = bulletPosition,
-          DamageAmount = 1f
+          DamageAmount = stats.Damage,
+          FireDamagePerSecond = stats.FireDamagePerSecond,
+          FireDuration = stats.FireDuration,
+          PoisonDamagePerSecond = stats.PoisonDamagePerSecond,
+          PoisonDuration = stats.PoisonDuration
         });
 
-        // Apply a knockback force to the entity based on the direction from the bullet to the entity
-        var knockbackEventBuffer = KnockbackEventLookup[nonBulletEntity];
-        knockbackEventBuffer.Add(new KnockbackEvent()
+        if (!KnockbackEventLookup.HasBuffer(targetEntity) || !LocalTransformLookup.HasComponent(targetEntity))
+          return;
+
+        var direction = math.normalizesafe(LocalTransformLookup[targetEntity].Position - bulletPosition);
+        KnockbackEventLookup[targetEntity].Add(new KnockbackEvent
         {
-          Direction = math.normalize(transform.Position - bulletPosition),
-          Force = 5f
+          Direction = direction,
+          Force = stats.Knockback
         });
       }
     }
 
-    // Gather trigger events and schedule the job
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-      var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
-      var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
-      state.Dependency =
-        new BulletCollisionJob()
-        {
-          Ecb = ecb.AsParallelWriter(),
-
-          LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
-          BulletLookup = SystemAPI.GetComponentLookup<Bullet>(true),
-          EnemyLookup = SystemAPI.GetComponentLookup<SimpleEnemy>(true),
-
-          DamageEventLookup = SystemAPI.GetBufferLookup<DamageEvent>(),
-          KnockbackEventLookup = SystemAPI.GetBufferLookup<KnockbackEvent>()
-        }
-        .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+      var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
+        .CreateCommandBuffer(state.WorldUnmanaged);
+      state.Dependency = new BulletCollisionJob
+      {
+        Ecb = ecb.AsParallelWriter(),
+        LocalTransformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
+        BulletLookup = SystemAPI.GetComponentLookup<Bullet>(true),
+        LevelEntityLookup = SystemAPI.GetComponentLookup<LevelEntity>(true),
+        DamageEventLookup = SystemAPI.GetBufferLookup<DamageEvent>(),
+        KnockbackEventLookup = SystemAPI.GetBufferLookup<KnockbackEvent>()
+      }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
     }
   }
 }

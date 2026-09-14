@@ -43,7 +43,12 @@ namespace Assets.Scripts.Entities.Game
         .ScheduleParallel(state.Dependency);
 
       // Reset level state to inactive
-      SystemAPI.SetComponent(levelStateEntity, new LevelState { CurrentState = LevelState.State.Inactive });
+      SystemAPI.SetComponent(levelStateEntity, new LevelState
+      {
+        CurrentState = LevelState.State.Inactive,
+        SelectedAreaIndex = levelState.SelectedAreaIndex,
+        SelectedLevelIndex = levelState.SelectedLevelIndex
+      });
     }
   }
 }

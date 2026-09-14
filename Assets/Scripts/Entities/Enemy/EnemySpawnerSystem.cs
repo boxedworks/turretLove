@@ -65,6 +65,7 @@ namespace Assets.Scripts.Entities.Enemy
       }
       state.EntityManager.AddBuffer<DamageEvent>(enemy);
       state.EntityManager.AddBuffer<KnockbackEvent>(enemy);
+      state.EntityManager.AddBuffer<DamageOverTimeEffect>(enemy);
 
       try
       {

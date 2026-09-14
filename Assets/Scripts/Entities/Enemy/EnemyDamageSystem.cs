@@ -17,10 +17,16 @@ namespace Assets.Scripts.Entities.Enemy
       public EntityCommandBuffer Ecb;
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
       public DynamicBuffer<LootSpawnEvent> LootSpawnBuffer;
+      public double CurrentTime;
 
       public Random Random;
 
-      public readonly void Execute(Entity entity, ref SimpleEnemy simpleEnemy, in LocalTransform transform, ref DynamicBuffer<DamageEvent> damageBuffer)
+      public readonly void Execute(
+        Entity entity,
+        ref SimpleEnemy simpleEnemy,
+        in LocalTransform transform,
+        ref DynamicBuffer<DamageEvent> damageBuffer,
+        ref DynamicBuffer<DamageOverTimeEffect> damageOverTimeBuffer)
       {
         if (damageBuffer.Length > 0)
         {
@@ -28,6 +34,18 @@ namespace Assets.Scripts.Entities.Enemy
           foreach (var damageEvent in damageBuffer)
           {
             simpleEnemy.Health -= damageEvent.DamageAmount;
+            DamageOverTimeSystem.Merge(
+              damageOverTimeBuffer,
+              DamageOverTimeType.Fire,
+              damageEvent.FireDamagePerSecond,
+              damageEvent.FireDuration,
+              CurrentTime);
+            DamageOverTimeSystem.Merge(
+              damageOverTimeBuffer,
+              DamageOverTimeType.Poison,
+              damageEvent.PoisonDamagePerSecond,
+              damageEvent.PoisonDuration,
+              CurrentTime);
           }
           damageBuffer.Clear();
 
@@ -75,6 +93,7 @@ namespace Assets.Scripts.Entities.Enemy
         Ecb = ecb,
         AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>(),
         LootSpawnBuffer = SystemAPI.GetSingletonBuffer<LootSpawnEvent>(),
+        CurrentTime = SystemAPI.Time.ElapsedTime,
         Random = new Random((uint)System.DateTime.Now.Ticks)
       }
         .Schedule(state.Dependency);

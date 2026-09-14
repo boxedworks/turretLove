@@ -1,9 +1,13 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Unity.Entities;
 using System.Collections.Generic;
+using System.Text;
+using Assets.Scripts.Bullets;
 using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Enemy;
+using Assets.Scripts.Entities.Loot;
 using Assets.Scripts.Entities.Player.Character;
 using Assets.Scripts.Entities.Player.Turret;
 using Assets.Scripts.Entities.Skills;
@@ -14,16 +18,17 @@ namespace Assets.Scripts.UI
 {
   public class MainMenuController : MonoBehaviour
   {
-    private const float DashDirectionIndicatorRadius = 64f;
-    private const float HeldDirectionIndicatorRadius = 112f;
-    private const float DashDirectionIndicatorSize = 48f;
-
     [SerializeField] private PanelRenderer panelRenderer;
     private VisualElement menuScreen;
     private Label statusLabel;
+    private Button saveSelectionButton;
     private Button playButton;
     private Button optionsButton;
     private Button exitButton;
+    private Button workshopCloseButton;
+    private Button workshopOpenButton;
+    private Button commandCenterBackButton;
+    private Button commandCenterWorkshopButton;
     private VisualElement gameHud;
     private VisualElement turretHealthFill;
     private Label turretHealthLabel;
@@ -35,9 +40,30 @@ namespace Assets.Scripts.UI
     private Label dashDirectionIndicator;
     private Label heldDirectionIndicator;
     private VisualElement uiRoot;
+    private VisualElement workshopOverlay;
+    private VisualElement commandCenterOverlay;
+    private VisualElement saveSelectionOverlay;
+    private VisualElement saveSlotList;
+    private Label saveSelectionMessage;
+    private Button saveSelectionBackButton;
+    private VisualElement workshopResourceList;
+    private VisualElement workshopRecipeList;
+    private VisualElement workshopBulletList;
+    private VisualElement workshopModifierList;
+    private VisualElement workshopEquipmentSlots;
+    private Label workshopBulletDetails;
+    private Label workshopStatus;
+    private Label workshopTitle;
+    private Label commandCenterSaveLabel;
+    private Label commandCenterSelectionLabel;
+    private Label commandCenterMessage;
     private bool isGameRunning;
-    private readonly Dictionary<SkillType, Texture2D> skillIcons = new();
-    private Texture2D rechargeOverlayTexture;
+    private BulletInventoryService subscribedInventory;
+    private readonly List<Button> commandLevelButtons = new();
+    private SaveSelectionMenu saveSelectionMenu;
+    private CommandCenterMenu commandCenterMenu;
+    private BulletWorkshopMenu workshopMenu;
+    private GameHudController gameHudController;
 
     private void OnEnable()
     {
@@ -63,9 +89,14 @@ namespace Assets.Scripts.UI
       uiRoot = root;
       menuScreen = root.Q<VisualElement>("menu-screen");
       statusLabel = root.Q<Label>("status-label");
+      saveSelectionButton = root.Q<Button>("save-selection-button");
       playButton = root.Q<Button>("play-button");
       optionsButton = root.Q<Button>("options-button");
       exitButton = root.Q<Button>("exit-button");
+      workshopCloseButton = root.Q<Button>("workshop-close-button");
+      workshopOpenButton = root.Q<Button>("workshop-open-button");
+      commandCenterBackButton = root.Q<Button>("command-center-back-button");
+      commandCenterWorkshopButton = root.Q<Button>("command-center-workshop-button");
       gameHud = root.Q<VisualElement>("game-hud");
       turretHealthFill = root.Q<VisualElement>("turret-health-fill");
       turretHealthLabel = root.Q<Label>("turret-health-label");
@@ -76,25 +107,80 @@ namespace Assets.Scripts.UI
       skillBar = root.Q<VisualElement>("skill-bar");
       dashDirectionIndicator = root.Q<Label>("dash-direction-indicator");
       heldDirectionIndicator = root.Q<Label>("held-direction-indicator");
+      workshopOverlay = root.Q<VisualElement>("workshop-overlay");
+      commandCenterOverlay = root.Q<VisualElement>("command-center-overlay");
+      saveSelectionOverlay = root.Q<VisualElement>("save-selection-overlay");
+      saveSlotList = root.Q<VisualElement>("save-slot-list");
+      saveSelectionMessage = root.Q<Label>("save-selection-message");
+      saveSelectionBackButton = root.Q<Button>("save-selection-back-button");
+      workshopResourceList = root.Q<VisualElement>("workshop-resource-list");
+      workshopRecipeList = root.Q<VisualElement>("workshop-recipe-list");
+      workshopBulletList = root.Q<VisualElement>("workshop-bullet-list");
+      workshopModifierList = root.Q<VisualElement>("workshop-modifier-list");
+      workshopEquipmentSlots = root.Q<VisualElement>("workshop-equipment-slots");
+      workshopBulletDetails = root.Q<Label>("workshop-bullet-details");
+      workshopStatus = root.Q<Label>("workshop-status");
+      workshopTitle = root.Q<Label>(className: "workshop-title");
+      commandCenterSaveLabel = root.Q<Label>("command-center-save-label");
+      commandCenterSelectionLabel = root.Q<Label>("command-center-selection-label");
+      commandCenterMessage = root.Q<Label>("command-center-message");
+      commandLevelButtons.Clear();
+      root.Query<Button>(className: "command-level-button").ToList(commandLevelButtons);
 
+      saveSelectionButton?.RegisterCallback<ClickEvent>(OnSaveSelectionClicked);
       playButton?.RegisterCallback<ClickEvent>(OnPlayClicked);
       optionsButton?.RegisterCallback<ClickEvent>(OnOptionsClicked);
       exitButton?.RegisterCallback<ClickEvent>(OnExitClicked);
+      workshopOpenButton?.RegisterCallback<ClickEvent>(OnWorkshopClicked);
+      saveSelectionMenu = new SaveSelectionMenu(
+        saveSelectionOverlay, saveSlotList, saveSelectionMessage, saveSelectionBackButton, UpdateMenuSaveStatus);
+      commandCenterMenu = new CommandCenterMenu(
+        commandCenterOverlay, commandCenterSaveLabel, commandCenterSelectionLabel, commandCenterMessage,
+        commandCenterBackButton, commandCenterWorkshopButton, commandLevelButtons,
+        CloseCommandCenter, OpenWorkshopFromCommandCenter, StartSelectedLevel);
+      workshopMenu = new BulletWorkshopMenu(
+        workshopOverlay, workshopCloseButton, workshopResourceList, workshopRecipeList, workshopBulletList,
+        workshopModifierList, workshopEquipmentSlots, workshopBulletDetails, workshopStatus, workshopTitle,
+        CloseWorkshop);
+      gameHudController = new GameHudController(
+        gameHud, turretHealthFill, turretHealthLabel, turretAmmoLabel, turretTargetLabel, turretTargetHealthLabel,
+        turretTargetOutline, skillBar, dashDirectionIndicator, heldDirectionIndicator, uiRoot);
+      saveSelectionMenu.RegisterCallbacks();
+      commandCenterMenu.RegisterCallbacks();
+      workshopMenu.RegisterCallbacks();
+      SubscribeToInventory();
       SetGameUiVisibility();
+      workshopMenu.Hide();
+      commandCenterMenu.Hide();
+      saveSelectionMenu.Hide();
+      UpdateMenuSaveStatus();
     }
 
     private void UnregisterButtonCallbacks()
     {
+      saveSelectionButton?.UnregisterCallback<ClickEvent>(OnSaveSelectionClicked);
       playButton?.UnregisterCallback<ClickEvent>(OnPlayClicked);
       optionsButton?.UnregisterCallback<ClickEvent>(OnOptionsClicked);
       exitButton?.UnregisterCallback<ClickEvent>(OnExitClicked);
+      workshopOpenButton?.UnregisterCallback<ClickEvent>(OnWorkshopClicked);
+      saveSelectionMenu?.UnregisterCallbacks();
+      commandCenterMenu?.UnregisterCallbacks();
+      workshopMenu?.UnregisterCallbacks();
+      commandLevelButtons.Clear();
+      if (subscribedInventory != null)
+        subscribedInventory.Changed -= OnInventoryChanged;
+      subscribedInventory = null;
     }
 
     private void OnPlayClicked(ClickEvent clickEvent)
     {
-      isGameRunning = true;
-      SetGameUiVisibility();
-      StartGame();
+      if (!BulletInventoryService.Instance.HasActiveSave)
+      {
+        saveSelectionMenu.Show("Select or create a save slot before playing.");
+        return;
+      }
+
+      commandCenterMenu.Show();
     }
 
     private void OnOptionsClicked(ClickEvent clickEvent)
@@ -111,383 +197,148 @@ namespace Assets.Scripts.UI
 #endif
     }
 
-    private void StartGame()
+    private void OnWorkshopClicked(ClickEvent clickEvent)
     {
-      // Get the default world and send LevelStart event
+      if (!BulletInventoryService.Instance.HasActiveSave)
+      {
+        saveSelectionMenu.Show("Select or create a save slot before opening the workshop.");
+        return;
+      }
+
+      workshopMenu.Show(isGameRunning);
+    }
+
+    private void StartSelectedLevel(int areaIndex, int levelIndex)
+    {
+      if (!BulletInventoryService.Instance.HasActiveSave)
+      {
+        saveSelectionMenu.Show("Select or create a save slot before deploying.");
+        return;
+      }
+
+      if (!StartGame(areaIndex, levelIndex))
+      {
+        commandCenterMenu.ShowMessage("Unable to start the level. Please try again.");
+        return;
+      }
+
+      isGameRunning = true;
+      commandCenterMenu.Hide();
+      workshopMenu.Hide();
+      saveSelectionMenu.Hide();
+      SetGameUiVisibility();
+    }
+
+    private void OnSaveSelectionClicked(ClickEvent clickEvent)
+    {
+      saveSelectionMenu.Show();
+    }
+
+    private bool StartGame(int areaIndex, int levelIndex)
+    {
       var world = World.DefaultGameObjectInjectionWorld;
       if (world == null || !world.IsCreated)
-        return;
+        return false;
 
-      // Get the existing LevelState singleton created by LevelLifecycleSystem
-      var levelStateEntity = world.EntityManager.CreateEntityQuery(typeof(LevelState)).GetSingletonEntity();
+      var levelStateQuery = world.EntityManager.CreateEntityQuery(typeof(LevelState));
+      if (levelStateQuery.IsEmptyIgnoreFilter)
+      {
+        levelStateQuery.Dispose();
+        return false;
+      }
+
+      var levelStateEntity = levelStateQuery.GetSingletonEntity();
+      levelStateQuery.Dispose();
       var eventBuffer = world.EntityManager.GetBuffer<LevelEvent>(levelStateEntity);
-      eventBuffer.Add(new LevelEvent { Type = LevelEvent.EventType.LevelStart });
+      eventBuffer.Add(new LevelEvent
+      {
+        Type = LevelEvent.EventType.LevelStart,
+        AreaIndex = areaIndex,
+        LevelIndex = levelIndex
+      });
+      return true;
     }
 
     private void Update()
     {
+      if (isGameRunning && Keyboard.current != null && Keyboard.current.bKey.wasPressedThisFrame)
+      {
+        if (workshopMenu.IsVisible)
+          workshopMenu.Hide();
+        else
+          workshopMenu.Show(true);
+      }
+      if (isGameRunning && workshopMenu.IsVisible
+        && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        workshopMenu.Hide();
+
       if (!isGameRunning)
         return;
 
-      var world = World.DefaultGameObjectInjectionWorld;
-      if (world == null || !world.IsCreated)
-        return;
-
-      UpdateTurretHealth(world.EntityManager);
-      UpdateTurretAmmo(world.EntityManager);
-      UpdateTurretTarget(world.EntityManager);
-      UpdateTurretTargetHealth(world.EntityManager);
-      UpdateTurretTargetOutline(world.EntityManager);
-      UpdateSkills(world.EntityManager);
+      gameHudController.Update();
     }
 
     private void SetGameUiVisibility()
     {
       if (menuScreen != null)
         menuScreen.style.display = isGameRunning ? DisplayStyle.None : DisplayStyle.Flex;
-      if (gameHud != null)
-        gameHud.style.display = isGameRunning ? DisplayStyle.Flex : DisplayStyle.None;
+      gameHudController?.SetVisible(isGameRunning);
     }
 
-    private void UpdateTurretHealth(EntityManager entityManager)
+    private void CloseWorkshop()
     {
-      if (turretHealthFill == null || turretHealthLabel == null)
-        return;
-
-      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretHealth>());
-      if (turretQuery.IsEmptyIgnoreFilter)
-      {
-        turretHealthLabel.text = "-- / --";
-        turretHealthFill.style.width = Length.Percent(0f);
-      }
-      else
-      {
-        var health = turretQuery.GetSingleton<TurretHealth>();
-        turretHealthLabel.text = $"{health.CurrentHealth:0} / {health.MaxHealth:0}";
-        var healthPercentage = health.MaxHealth > 0f
-          ? Mathf.Clamp01(health.CurrentHealth / health.MaxHealth) * 100f
-          : 0f;
-        turretHealthFill.style.width = Length.Percent(healthPercentage);
-      }
-
-      turretQuery.Dispose();
+      workshopMenu.Hide();
+      if (!isGameRunning)
+        commandCenterMenu.Show();
     }
 
-    private void UpdateTurretTarget(EntityManager entityManager)
+    private void CloseCommandCenter()
     {
-      if (turretTargetLabel == null)
-        return;
-
-      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
-      if (turretQuery.IsEmptyIgnoreFilter)
-      {
-        turretTargetLabel.text = "NONE";
-      }
-      else
-      {
-        var turret = turretQuery.GetSingleton<TurretAttributes>();
-        turretTargetLabel.text = entityManager.Exists(turret.CurrentTarget)
-          && entityManager.HasComponent<SimpleEnemy>(turret.CurrentTarget)
-          ? entityManager.GetComponentData<SimpleEnemy>(turret.CurrentTarget).Type.ToString().ToUpperInvariant()
-          : "NONE";
-      }
-
-      turretQuery.Dispose();
+      commandCenterMenu.Hide();
     }
 
-    private void UpdateTurretAmmo(EntityManager entityManager)
+    private void OpenWorkshopFromCommandCenter()
     {
-      if (turretAmmoLabel == null)
-        return;
-
-      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAmmo>());
-      if (turretQuery.IsEmptyIgnoreFilter)
-      {
-        turretAmmoLabel.text = "-- / --";
-      }
-      else
-      {
-        var ammo = turretQuery.GetSingleton<TurretAmmo>();
-        turretAmmoLabel.text = $"{ammo.CurrentAmmo} / {ammo.MagazineSize}";
-      }
-
-      turretQuery.Dispose();
+      commandCenterMenu.Hide();
+      workshopMenu.Show(false);
     }
 
-    private void UpdateTurretTargetOutline(EntityManager entityManager)
+    private void UpdateMenuSaveStatus()
     {
-      if (turretTargetOutline == null || uiRoot == null)
+      if (statusLabel == null)
         return;
 
-      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
-      if (turretQuery.IsEmptyIgnoreFilter)
-      {
-        turretTargetOutline.style.display = DisplayStyle.None;
-        turretQuery.Dispose();
-        return;
-      }
-
-      var target = turretQuery.GetSingleton<TurretAttributes>().CurrentTarget;
-      turretQuery.Dispose();
-      if (!entityManager.Exists(target) || !entityManager.HasComponent<LocalTransform>(target))
-      {
-        turretTargetOutline.style.display = DisplayStyle.None;
-        return;
-      }
-
-      var camera = Camera.main;
-      var targetPosition = entityManager.GetComponentData<LocalTransform>(target).Position;
-      var targetScreenPosition = camera != null
-        ? camera.WorldToScreenPoint(new Vector3(targetPosition.x, targetPosition.y, targetPosition.z))
-        : Vector3.back;
-      if (targetScreenPosition.z < 0f || Screen.width == 0 || Screen.height == 0)
-      {
-        turretTargetOutline.style.display = DisplayStyle.None;
-        return;
-      }
-
-      const float outlineSize = 56f;
-      turretTargetOutline.style.left = Length.Pixels(targetScreenPosition.x / Screen.width * uiRoot.worldBound.width - outlineSize / 2f);
-      turretTargetOutline.style.top = Length.Pixels((1f - targetScreenPosition.y / Screen.height) * uiRoot.worldBound.height - outlineSize / 2f);
-      turretTargetOutline.style.display = DisplayStyle.Flex;
+      var inventory = BulletInventoryService.Instance;
+      statusLabel.text = inventory.HasActiveSave
+        ? $"ACTIVE SAVE: SLOT {inventory.ActiveSlotIndex + 1}"
+        : "SELECT A SAVE SLOT TO PLAY.";
     }
 
-    private void UpdateTurretTargetHealth(EntityManager entityManager)
+    private void SubscribeToInventory()
     {
-      if (turretTargetHealthLabel == null)
+      var inventory = BulletInventoryService.Instance;
+      if (subscribedInventory == inventory)
         return;
-
-      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
-      if (turretQuery.IsEmptyIgnoreFilter)
-      {
-        turretTargetHealthLabel.text = "--";
-      }
-      else
-      {
-        var target = turretQuery.GetSingleton<TurretAttributes>().CurrentTarget;
-        turretTargetHealthLabel.text = entityManager.Exists(target)
-          && entityManager.HasComponent<SimpleEnemy>(target)
-          ? entityManager.GetComponentData<SimpleEnemy>(target).Health.ToString("0")
-          : "--";
-      }
-
-      turretQuery.Dispose();
+      if (subscribedInventory != null)
+        subscribedInventory.Changed -= OnInventoryChanged;
+      subscribedInventory = inventory;
+      subscribedInventory.Changed += OnInventoryChanged;
     }
 
-    private void UpdateSkills(EntityManager entityManager)
+    private void OnInventoryChanged()
     {
-      if (skillBar == null)
-        return;
-
-      var playerQuery = entityManager.CreateEntityQuery(
-        ComponentType.ReadOnly<PlayerAttributes>(),
-        ComponentType.ReadOnly<Skill>(),
-        ComponentType.ReadOnly<LocalTransform>());
-      if (playerQuery.IsEmptyIgnoreFilter)
-      {
-        skillBar.Clear();
-        HideDirectionIndicators();
-        playerQuery.Dispose();
-        return;
-      }
-
-      var player = playerQuery.GetSingletonEntity();
-      var skills = entityManager.GetBuffer<Skill>(player, true);
-      UpdateDirectionIndicators(skills, entityManager.GetComponentData<LocalTransform>(player).Position, entityManager);
-      if (skillBar.childCount != skills.Length)
-        CreateSkillSlots(skills.Length);
-
-      for (var skillIndex = 0; skillIndex < skills.Length; skillIndex++)
-      {
-        var skill = skills[skillIndex];
-        var slot = skillBar[skillIndex];
-        slot.tooltip = $"{skill.Type}: {skill.RemainingUses} / {skill.MaxUses} uses";
-        slot.Q<VisualElement>("skill-icon").style.backgroundImage = GetSkillIcon(skill.Type);
-        slot.Q<Label>("skill-uses").text = skill.RemainingUses.ToString();
-
-        var rechargeOverlay = slot.Q<VisualElement>("skill-recharge-overlay");
-        var hasRecharge = skill.RechargeDuration > 0f && skill.RemainingUses < skill.MaxUses;
-        rechargeOverlay.style.display = hasRecharge ? DisplayStyle.Flex : DisplayStyle.None;
-        if (hasRecharge)
-        {
-          var rechargeProgress = Mathf.Clamp01(skill.RechargeElapsed / skill.RechargeDuration);
-          rechargeOverlay.style.height = Length.Percent((1f - rechargeProgress) * 100f);
-        }
-      }
-
-      playerQuery.Dispose();
-    }
-
-    private void UpdateDirectionIndicators(
-      DynamicBuffer<Skill> skills,
-      Unity.Mathematics.float3 playerPosition,
-      EntityManager entityManager)
-    {
-      if (uiRoot == null)
-        return;
-
-      var dashDirection = Vector2.zero;
-      for (var skillIndex = 0; skillIndex < skills.Length; skillIndex++)
-      {
-        var skill = skills[skillIndex];
-        if (skill.Type != SkillType.Dash || !skill.IsCharging)
-          continue;
-
-        dashDirection = new Vector2(skill.ChargeDirection.x, skill.ChargeDirection.y);
-        break;
-      }
-
-      var heldDirection = GetHeldArrowDirection(entityManager);
-
-      var camera = Camera.main;
-      if (camera == null)
-      {
-        HideDirectionIndicators();
-        return;
-      }
-
-      var playerScreenPosition = camera.WorldToScreenPoint(new Vector3(playerPosition.x, playerPosition.y, playerPosition.z));
-      if (playerScreenPosition.z < 0f || Screen.width == 0 || Screen.height == 0)
-      {
-        HideDirectionIndicators();
-        return;
-      }
-
-      UpdateDirectionIndicator(
-        dashDirectionIndicator,
-        dashDirection,
-        playerScreenPosition,
-        DashDirectionIndicatorRadius);
-      UpdateDirectionIndicator(
-        heldDirectionIndicator,
-        heldDirection,
-        playerScreenPosition,
-        HeldDirectionIndicatorRadius);
-    }
-
-    private void UpdateDirectionIndicator(
-      Label indicator,
-      Vector2 direction,
-      Vector3 playerScreenPosition,
-      float radius)
-    {
-      if (indicator == null)
-        return;
-
-      if (direction.sqrMagnitude == 0f)
-      {
-        indicator.style.display = DisplayStyle.None;
-        return;
-      }
-
-      var indicatorScreenPosition = (Vector2)playerScreenPosition + direction.normalized * radius;
-      indicator.style.left = Length.Pixels(indicatorScreenPosition.x / Screen.width * uiRoot.worldBound.width - DashDirectionIndicatorSize / 2f);
-      indicator.style.top = Length.Pixels((1f - indicatorScreenPosition.y / Screen.height) * uiRoot.worldBound.height - DashDirectionIndicatorSize / 2f);
-      indicator.text = GetDirectionIndicatorText(direction);
-      indicator.style.display = DisplayStyle.Flex;
-    }
-
-    private static Vector2 GetHeldArrowDirection(EntityManager entityManager)
-    {
-      var inputQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<InputState>());
-      if (inputQuery.IsEmptyIgnoreFilter)
-      {
-        inputQuery.Dispose();
-        return Vector2.zero;
-      }
-
-      var input = inputQuery.GetSingleton<InputState>();
-      inputQuery.Dispose();
-      return new Vector2(
-        (IsArrowKeyDown(input.ArrowRightState) ? 1f : 0f) - (IsArrowKeyDown(input.ArrowLeftState) ? 1f : 0f),
-        (IsArrowKeyDown(input.ArrowUpState) ? 1f : 0f) - (IsArrowKeyDown(input.ArrowDownState) ? 1f : 0f));
-    }
-
-    private static bool IsArrowKeyDown(InputButtonState state)
-    {
-      return state == InputButtonState.Pressed || state == InputButtonState.Held;
-    }
-
-    private void HideDirectionIndicators()
-    {
-      if (dashDirectionIndicator != null)
-        dashDirectionIndicator.style.display = DisplayStyle.None;
-      if (heldDirectionIndicator != null)
-        heldDirectionIndicator.style.display = DisplayStyle.None;
-    }
-
-    private static string GetDirectionIndicatorText(Unity.Mathematics.float2 direction)
-    {
-      if (direction.y > 0f)
-        return direction.x > 0f ? "↗" : direction.x < 0f ? "↖" : "↑";
-      if (direction.y < 0f)
-        return direction.x > 0f ? "↘" : direction.x < 0f ? "↙" : "↓";
-
-      return direction.x > 0f ? "→" : "←";
-    }
-
-    private void CreateSkillSlots(int skillCount)
-    {
-      skillBar.Clear();
-      for (var skillIndex = 0; skillIndex < skillCount; skillIndex++)
-      {
-        var skillSlot = new VisualElement();
-        skillSlot.AddToClassList("skill-slot");
-
-        var skillIcon = new VisualElement { name = "skill-icon" };
-        skillIcon.AddToClassList("skill-icon");
-
-        var rechargeOverlay = new VisualElement { name = "skill-recharge-overlay" };
-        rechargeOverlay.AddToClassList("skill-recharge-overlay");
-        rechargeOverlay.style.backgroundImage = GetRechargeOverlayTexture();
-        skillIcon.Add(rechargeOverlay);
-
-        var skillUses = new Label { name = "skill-uses" };
-        skillUses.AddToClassList("skill-uses");
-        skillIcon.Add(skillUses);
-        skillSlot.Add(skillIcon);
-
-        skillBar.Add(skillSlot);
-      }
-    }
-
-    private Texture2D GetSkillIcon(SkillType skillType)
-    {
-      if (!skillIcons.TryGetValue(skillType, out var icon))
-      {
-        icon = Resources.Load<Texture2D>($"Icons/Skills/{skillType}");
-        skillIcons.Add(skillType, icon);
-      }
-
-      return icon;
-    }
-
-    private Texture2D GetRechargeOverlayTexture()
-    {
-      if (rechargeOverlayTexture != null)
-        return rechargeOverlayTexture;
-
-      const int gradientHeight = 64;
-      rechargeOverlayTexture = new Texture2D(1, gradientHeight, TextureFormat.RGBA32, false);
-      rechargeOverlayTexture.wrapMode = TextureWrapMode.Clamp;
-      rechargeOverlayTexture.filterMode = FilterMode.Bilinear;
-
-      var pixels = new Color[gradientHeight];
-      for (var pixelIndex = 0; pixelIndex < gradientHeight; pixelIndex++)
-      {
-        var progress = pixelIndex / (float)(gradientHeight - 1);
-        pixels[pixelIndex] = new Color(0.03f, 0.1f, 0.11f, Mathf.Lerp(0.88f, 0.3f, progress));
-      }
-
-      rechargeOverlayTexture.SetPixels(pixels);
-      rechargeOverlayTexture.Apply();
-      return rechargeOverlayTexture;
+      UpdateMenuSaveStatus();
+      if (saveSelectionMenu.IsVisible)
+        saveSelectionMenu.Refresh();
+      if (commandCenterMenu.IsVisible)
+        commandCenterMenu.Refresh();
+      if (workshopMenu.IsVisible)
+        workshopMenu.Refresh();
     }
 
     private void OnDestroy()
     {
-      if (rechargeOverlayTexture != null)
-        Destroy(rechargeOverlayTexture);
+      gameHudController?.Dispose();
     }
   }
 }

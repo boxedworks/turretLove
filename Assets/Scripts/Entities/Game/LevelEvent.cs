@@ -11,6 +11,8 @@ namespace Assets.Scripts.Entities.Game
     }
 
     public EventType Type;
+    public int AreaIndex;
+    public int LevelIndex;
   }
 
   public struct LevelState : IComponentData
@@ -23,5 +25,7 @@ namespace Assets.Scripts.Entities.Game
     }
 
     public State CurrentState;
+    public int SelectedAreaIndex;
+    public int SelectedLevelIndex;
   }
 }

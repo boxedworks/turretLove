@@ -27,8 +27,10 @@ Assets/Settings
 
 *.mat
 *.prefab
-*.uxml
 *.xsd
+*.tss
+
+*.shadergraph
 
 *.wav
 

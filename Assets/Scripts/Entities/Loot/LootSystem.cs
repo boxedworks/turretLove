@@ -13,6 +13,7 @@ namespace Assets.Scripts.Entities.Loot
     public readonly void OnCreate(ref SystemState state)
     {
       state.RequireForUpdate<PlayerAttributes>();
+      state.RequireForUpdate<LootCollectedEvent>();
     }
 
     [BurstCompile]
@@ -40,7 +41,8 @@ namespace Assets.Scripts.Entities.Loot
         PlayerPosition = playerPosition,
         CurrentTime = currentTime,
         DeltaTime = deltaTime,
-        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>()
+        AudioEventBuffer = SystemAPI.GetSingletonBuffer<AudioEvent>(),
+        LootCollectionEventBuffer = SystemAPI.GetSingletonBuffer<LootCollectedEvent>()
       }.Schedule(state.Dependency);
     }
 
@@ -92,10 +94,11 @@ namespace Assets.Scripts.Entities.Loot
     {
       public EntityCommandBuffer Ecb;
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
+      public DynamicBuffer<LootCollectedEvent> LootCollectionEventBuffer;
       public NativeReference<float3> PlayerPosition;
       public NativeReference<float> CurrentTime, DeltaTime;
 
-      public readonly void Execute(Entity entity, in AbsorbingToPlayerEvent absorbEvent, LocalTransform localTransform)
+      public readonly void Execute(Entity entity, in AbsorbingToPlayerEvent absorbEvent, in LootData lootData, LocalTransform localTransform)
       {
         var directionToPlayer = PlayerPosition.Value - localTransform.Position;
         var distanceToPlayer = math.length(directionToPlayer);
@@ -104,6 +107,7 @@ namespace Assets.Scripts.Entities.Loot
         {
           Ecb.DestroyEntity(entity);
           AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.LootPickup });
+          LootCollectionEventBuffer.Add(new LootCollectedEvent { Type = lootData.Type, Amount = 1 });
         }
         else
         {
