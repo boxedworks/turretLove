@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="workshop-overlay" class="workshop-overlay">
+        <ui:VisualElement class="workshop-panel">
+            <ui:VisualElement class="workshop-header"><ui:VisualElement><ui:Label text="FIELD WORKSHOP" class="workshop-title" /><ui:Label text="CRAFT • MODIFY • EQUIP" class="workshop-subtitle" /></ui:VisualElement><ui:Button name="workshop-close-button" text="CLOSE" class="workshop-close-button" /></ui:VisualElement>
+            <ui:ScrollView class="workshop-scroll">
+                <ui:Label text="RESOURCES" class="workshop-section-title" /><ui:VisualElement name="workshop-resource-list" class="workshop-resource-list" />
+                <ui:Label text="BULLET RECIPES" class="workshop-section-title" /><ui:VisualElement name="workshop-recipe-list" class="workshop-list" />
+                <ui:Label text="CRAFTED BULLETS" class="workshop-section-title" /><ui:VisualElement name="workshop-bullet-list" class="workshop-list" />
+                <ui:Label name="workshop-bullet-details" text="Select a crafted bullet to inspect, modify, or equip it." class="workshop-details" />
+                <ui:Label text="MODIFIERS" class="workshop-section-title" /><ui:VisualElement name="workshop-modifier-list" class="workshop-list" />
+                <ui:Label text="EQUIPPED MAGAZINE (FIRES 1 → 4)" class="workshop-section-title" /><ui:VisualElement name="workshop-equipment-slots" class="workshop-list" />
+            </ui:ScrollView>
+            <ui:Label name="workshop-status" class="workshop-status" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

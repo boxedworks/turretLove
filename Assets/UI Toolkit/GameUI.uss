@@ -117,6 +117,313 @@
     font-size: 11px;
 }
 
+.save-selection-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(3, 11, 13, 0.82);
+}
+
+.save-selection-panel {
+    width: 480px;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 28px;
+    padding-bottom: 24px;
+    background-color: var(--panel);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+}
+
+.save-selection-title {
+    color: var(--accent);
+    font-size: 24px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.save-selection-message {
+    min-height: 20px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    color: var(--muted-ink);
+    font-size: 12px;
+}
+
+.save-slot-list {
+    margin-bottom: 12px;
+}
+
+.save-slot-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    margin-bottom: 8px;
+    padding-left: 12px;
+    padding-right: 8px;
+    background-color: rgb(28, 57, 57);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+}
+
+.save-slot-active {
+    border-left-color: var(--accent);
+    border-right-color: var(--accent);
+    border-top-color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.save-slot-label {
+    color: var(--ink);
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.save-slot-state {
+    color: var(--muted-ink);
+    font-size: 10px;
+}
+
+.save-slot-actions {
+    flex-direction: row;
+    align-items: center;
+}
+
+.save-slot-action,
+.save-selection-back-button {
+    min-height: 30px;
+    margin-left: 6px;
+    color: var(--ink);
+    background-color: rgba(10, 24, 26, 0.9);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+    font-size: 10px;
+}
+
+.save-slot-delete {
+    color: var(--danger);
+    border-left-color: var(--danger);
+    border-right-color: var(--danger);
+    border-top-color: var(--danger);
+    border-bottom-color: var(--danger);
+}
+
+.save-slot-confirm-delete {
+    color: rgb(35, 13, 13);
+    background-color: var(--danger);
+}
+
+.save-selection-back-button {
+    width: 100%;
+    margin-left: 0;
+}
+
+.command-center-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(3, 11, 13, 0.82);
+}
+
+.command-center-panel {
+    width: 660px;
+    max-height: 88%;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 24px;
+    padding-bottom: 22px;
+    background-color: var(--panel);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+}
+
+.command-center-header,
+.command-workshop-section,
+.command-level-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.command-center-header,
+.command-workshop-section {
+    justify-content: space-between;
+}
+
+.command-center-title {
+    color: var(--accent);
+    font-size: 24px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.command-center-save-label,
+.command-center-note,
+.command-center-message {
+    color: var(--muted-ink);
+    font-size: 11px;
+}
+
+.command-center-save-label {
+    margin-top: 4px;
+}
+
+.command-center-back-button,
+.command-workshop-button,
+.command-start-button,
+.command-level-button {
+    color: var(--ink);
+    background-color: rgb(28, 57, 57);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+    font-size: 11px;
+}
+
+.command-center-back-button {
+    height: 30px;
+}
+
+.command-center-section-title {
+    color: var(--accent);
+    margin-top: 18px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.command-center-selection-label {
+    color: var(--ink);
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.command-center-note {
+    margin-top: 3px;
+    margin-bottom: 12px;
+}
+
+.command-area-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.command-area {
+    width: 50%;
+    margin-bottom: 12px;
+}
+
+.command-area-title {
+    color: var(--muted-ink);
+    margin-bottom: 5px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.command-level-button {
+    min-width: 76px;
+    height: 34px;
+    margin-right: 6px;
+}
+
+.command-level-button:hover,
+.command-level-button:focus,
+.command-level-selected {
+    color: rgb(15, 27, 27);
+    background-color: var(--accent);
+    border-left-color: var(--accent);
+    border-right-color: var(--accent);
+    border-top-color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.command-start-button {
+    height: 38px;
+    margin-top: 4px;
+    color: rgb(15, 27, 27);
+    background-color: var(--accent);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--accent);
+    border-right-color: var(--accent);
+    border-top-color: var(--accent);
+    border-bottom-color: var(--accent);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.command-start-button:disabled {
+    color: var(--muted-ink);
+    background-color: rgb(28, 57, 57);
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+}
+
+.command-workshop-section {
+    border-top-width: 1px;
+    border-top-color: var(--panel-edge);
+    padding-top: 4px;
+}
+
+.command-workshop-section .command-center-section-title {
+    margin-top: 10px;
+}
+
+.command-workshop-button {
+    height: 34px;
+    margin-left: 18px;
+}
+
+.command-center-message {
+    min-height: 16px;
+    margin-top: 12px;
+}
+
 .hud {
     position: absolute;
     left: 0;
@@ -303,6 +610,168 @@
     -unity-text-outline-color: rgb(8, 18, 22);
 }
 
+.workshop-open-button {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    height: 34px;
+    color: var(--ink);
+    background-color: var(--panel);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+    font-size: 11px;
+}
+
+.workshop-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(3, 11, 13, 0.82);
+}
+
+.workshop-panel {
+    width: 620px;
+    max-height: 88%;
+    padding-left: 26px;
+    padding-right: 26px;
+    padding-top: 20px;
+    padding-bottom: 18px;
+    background-color: var(--panel);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+}
+
+.workshop-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.workshop-title {
+    color: var(--accent);
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.workshop-subtitle {
+    color: var(--muted-ink);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.workshop-close-button,
+.workshop-action-button {
+    color: var(--ink);
+    background-color: rgb(28, 57, 57);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--panel-edge);
+    border-right-color: var(--panel-edge);
+    border-top-color: var(--panel-edge);
+    border-bottom-color: var(--panel-edge);
+    font-size: 11px;
+}
+
+.workshop-close-button {
+    height: 30px;
+}
+
+.workshop-scroll {
+    flex-grow: 1;
+}
+
+.workshop-section-title {
+    color: var(--accent);
+    margin-top: 12px;
+    margin-bottom: 5px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.workshop-resource-list,
+.workshop-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.workshop-resource {
+    color: var(--ink);
+    min-width: 90px;
+    margin-right: 8px;
+    font-size: 11px;
+}
+
+.workshop-action-button {
+    min-height: 32px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    white-space: normal;
+}
+
+.workshop-bullet-selected {
+    border-left-color: var(--accent);
+    border-right-color: var(--accent);
+    border-top-color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.workshop-details {
+    color: var(--muted-ink);
+    white-space: normal;
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.workshop-slot-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.workshop-unequip-button {
+    color: var(--danger);
+    min-height: 32px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    background-color: transparent;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--danger);
+    border-right-color: var(--danger);
+    border-top-color: var(--danger);
+    border-bottom-color: var(--danger);
+}
+
+.workshop-status {
+    min-height: 20px;
+    color: var(--muted-ink);
+    margin-top: 8px;
+    font-size: 11px;
+}
+
 @media (max-width: 600px) {
     .menu-panel {
         width: 90%;
@@ -327,6 +796,18 @@
 
     .skill-bar-container {
         bottom: 92px;
+    }
+
+    .workshop-panel {
+        width: 90%;
+    }
+
+    .command-center-panel {
+        width: 90%;
+    }
+
+    .command-area {
+        width: 100%;
     }
 
 }

@@ -13,12 +13,13 @@ namespace Assets.Scripts.UI
     private readonly Label messageLabel;
     private readonly Button backButton;
     private readonly Button workshopButton;
+    private readonly Button startButton;
     private readonly List<Button> levelButtons;
     private readonly Action backRequested;
     private readonly Action workshopRequested;
-    private readonly Action<int, int> levelSelected;
-    private int selectedAreaIndex;
-    private int selectedLevelIndex;
+    private readonly Action<int, int> startRequested;
+    private int selectedAreaIndex = -1;
+    private int selectedLevelIndex = -1;
 
     public bool IsVisible => overlay != null && overlay.resolvedStyle.display != DisplayStyle.None;
 
@@ -29,10 +30,11 @@ namespace Assets.Scripts.UI
       Label messageLabel,
       Button backButton,
       Button workshopButton,
+      Button startButton,
       List<Button> levelButtons,
       Action backRequested,
       Action workshopRequested,
-      Action<int, int> levelSelected)
+      Action<int, int> startRequested)
     {
       this.overlay = overlay;
       this.saveLabel = saveLabel;
@@ -40,16 +42,18 @@ namespace Assets.Scripts.UI
       this.messageLabel = messageLabel;
       this.backButton = backButton;
       this.workshopButton = workshopButton;
+      this.startButton = startButton;
       this.levelButtons = levelButtons;
       this.backRequested = backRequested;
       this.workshopRequested = workshopRequested;
-      this.levelSelected = levelSelected;
+      this.startRequested = startRequested;
     }
 
     public void RegisterCallbacks()
     {
       backButton?.RegisterCallback<ClickEvent>(OnBackClicked);
       workshopButton?.RegisterCallback<ClickEvent>(OnWorkshopClicked);
+      startButton?.RegisterCallback<ClickEvent>(OnStartClicked);
       foreach (var levelButton in levelButtons)
         levelButton.RegisterCallback<ClickEvent>(OnLevelClicked);
     }
@@ -58,6 +62,7 @@ namespace Assets.Scripts.UI
     {
       backButton?.UnregisterCallback<ClickEvent>(OnBackClicked);
       workshopButton?.UnregisterCallback<ClickEvent>(OnWorkshopClicked);
+      startButton?.UnregisterCallback<ClickEvent>(OnStartClicked);
       foreach (var levelButton in levelButtons)
         levelButton.UnregisterCallback<ClickEvent>(OnLevelClicked);
     }
@@ -79,7 +84,9 @@ namespace Assets.Scripts.UI
       if (saveLabel != null)
         saveLabel.text = inventory.HasActiveSave ? $"ACTIVE SAVE: SLOT {inventory.ActiveSlotIndex + 1}" : "NO ACTIVE SAVE";
       if (selectionLabel != null)
-        selectionLabel.text = $"SELECTED: AREA {selectedAreaIndex + 1} / LEVEL {selectedLevelIndex + 1}";
+        selectionLabel.text = HasLevelSelection
+          ? $"SELECTED: AREA {selectedAreaIndex + 1} / LEVEL {selectedLevelIndex + 1}"
+          : "SELECT A LEVEL TO DEPLOY";
 
       for (var buttonIndex = 0; buttonIndex < levelButtons.Count; buttonIndex++)
       {
@@ -87,8 +94,10 @@ namespace Assets.Scripts.UI
         levelButtons[buttonIndex].EnableInClassList("command-level-selected", isSelected);
       }
 
+      if (startButton != null)
+        startButton.SetEnabled(HasLevelSelection && inventory.HasActiveSave);
       if (messageLabel != null)
-        messageLabel.text = "Select a level to deploy.";
+        messageLabel.text = HasLevelSelection ? "Ready to deploy." : "Select a level to deploy.";
     }
 
     public void ShowMessage(string message)
@@ -113,6 +122,12 @@ namespace Assets.Scripts.UI
       workshopRequested?.Invoke();
     }
 
+    private void OnStartClicked(ClickEvent clickEvent)
+    {
+      if (HasLevelSelection)
+        startRequested?.Invoke(selectedAreaIndex, selectedLevelIndex);
+    }
+
     private void OnLevelClicked(ClickEvent clickEvent)
     {
       var buttonIndex = levelButtons.IndexOf(clickEvent.currentTarget as Button);
@@ -122,7 +137,8 @@ namespace Assets.Scripts.UI
       selectedAreaIndex = buttonIndex / 3;
       selectedLevelIndex = buttonIndex % 3;
       Refresh();
-      levelSelected?.Invoke(selectedAreaIndex, selectedLevelIndex);
     }
+
+    private bool HasLevelSelection => selectedAreaIndex >= 0 && selectedLevelIndex >= 0;
   }
 }

@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="save-selection-overlay" class="save-selection-overlay">
+        <ui:VisualElement class="save-selection-panel">
+            <ui:Label text="SAVE SELECTION" class="save-selection-title" />
+            <ui:Label name="save-selection-message" class="save-selection-message" />
+            <ui:VisualElement name="save-slot-list" class="save-slot-list" />
+            <ui:Button name="save-selection-back-button" text="BACK" class="save-selection-back-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

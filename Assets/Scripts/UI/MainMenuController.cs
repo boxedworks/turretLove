@@ -29,6 +29,7 @@ namespace Assets.Scripts.UI
     private Button workshopOpenButton;
     private Button commandCenterBackButton;
     private Button commandCenterWorkshopButton;
+    private Button commandCenterStartButton;
     private VisualElement gameHud;
     private VisualElement turretHealthFill;
     private Label turretHealthLabel;
@@ -97,6 +98,7 @@ namespace Assets.Scripts.UI
       workshopOpenButton = root.Q<Button>("workshop-open-button");
       commandCenterBackButton = root.Q<Button>("command-center-back-button");
       commandCenterWorkshopButton = root.Q<Button>("command-center-workshop-button");
+      commandCenterStartButton = root.Q<Button>("command-center-start-button");
       gameHud = root.Q<VisualElement>("game-hud");
       turretHealthFill = root.Q<VisualElement>("turret-health-fill");
       turretHealthLabel = root.Q<Label>("turret-health-label");
@@ -136,7 +138,7 @@ namespace Assets.Scripts.UI
         saveSelectionOverlay, saveSlotList, saveSelectionMessage, saveSelectionBackButton, UpdateMenuSaveStatus);
       commandCenterMenu = new CommandCenterMenu(
         commandCenterOverlay, commandCenterSaveLabel, commandCenterSelectionLabel, commandCenterMessage,
-        commandCenterBackButton, commandCenterWorkshopButton, commandLevelButtons,
+        commandCenterBackButton, commandCenterWorkshopButton, commandCenterStartButton, commandLevelButtons,
         CloseCommandCenter, OpenWorkshopFromCommandCenter, StartSelectedLevel);
       workshopMenu = new BulletWorkshopMenu(
         workshopOverlay, workshopCloseButton, workshopResourceList, workshopRecipeList, workshopBulletList,
