@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Extensions;
+using Assets.Scripts.Entities.Player.Turret;
 
 namespace Assets.Scripts.Entities.Skills
 {
@@ -12,8 +13,9 @@ namespace Assets.Scripts.Entities.Skills
     partial struct ActivateSkillsJob : IJobEntity
     {
       public float DeltaTime;
+      public ComponentLookup<TurretAmmo> TurretAmmoLookup;
 
-      public readonly void Execute(
+      public void Execute(
         ref DynamicBuffer<Skill> skills,
         ref DynamicBuffer<SkillTriggerEvent> triggerEvents,
         ref PhysicsVelocity velocity,
@@ -28,6 +30,8 @@ namespace Assets.Scripts.Entities.Skills
             if (skill.ChargeDuration <= 0f || skill.ChargeElapsed >= skill.ChargeDuration)
             {
               Fire(ref velocity, mass, skill, skill.ChargeDirection);
+              if (skill.Type == SkillType.Reload)
+                skill.TargetEntity = Entity.Null;
               skill.IsCharging = false;
               skill.ChargeElapsed = 0f;
               skill.RechargeElapsed = 0f;
@@ -48,6 +52,9 @@ namespace Assets.Scripts.Entities.Skills
             var skill = skills[skillIndex];
             if (skill.Type != triggerEvent.Type)
               continue;
+
+            if (triggerEvent.TargetEntity != Entity.Null)
+              skill.TargetEntity = triggerEvent.TargetEntity;
 
             if (skill.IsCharging)
             {
@@ -77,6 +84,8 @@ namespace Assets.Scripts.Entities.Skills
             else
             {
               Fire(ref velocity, mass, skill, triggerEvent.Direction);
+              if (skill.Type == SkillType.Reload)
+                skill.TargetEntity = Entity.Null;
             }
 
             skills[skillIndex] = skill;
@@ -91,15 +100,25 @@ namespace Assets.Scripts.Entities.Skills
       private static bool CanFire(in Skill skill, float2 direction)
       {
         return skill.Type == SkillType.Halt ||
+          (skill.Type == SkillType.Reload && skill.TargetEntity != Entity.Null) ||
           (skill.Type == SkillType.Dash && math.lengthsq(direction) > 0f);
       }
 
-      private static void Fire(ref PhysicsVelocity velocity, in PhysicsMass mass, in Skill skill, float2 direction)
+      private void Fire(ref PhysicsVelocity velocity, in PhysicsMass mass, in Skill skill, float2 direction)
       {
         if (skill.Type == SkillType.Dash && math.lengthsq(direction) > 0f)
           velocity.ApplyLinearImpulse(mass, new float3(math.normalize(direction) * skill.EffectStrength, 0f));
         else if (skill.Type == SkillType.Halt)
           velocity.Linear = math.lerp(velocity.Linear, float3.zero, math.saturate(skill.EffectStrength));
+        else if (skill.Type == SkillType.Reload && TurretAmmoLookup.HasComponent(skill.TargetEntity))
+        {
+          var ammo = TurretAmmoLookup[skill.TargetEntity];
+          if (ammo.CurrentAmmo <= 0)
+          {
+            ammo.CurrentAmmo = ammo.MagazineSize;
+            TurretAmmoLookup[skill.TargetEntity] = ammo;
+          }
+        }
       }
 
       private readonly void Recharge(ref Skill skill)
@@ -134,8 +153,9 @@ namespace Assets.Scripts.Entities.Skills
     {
       state.Dependency = new ActivateSkillsJob
       {
-        DeltaTime = SystemAPI.Time.DeltaTime
-      }.ScheduleParallel(state.Dependency);
+        DeltaTime = SystemAPI.Time.DeltaTime,
+        TurretAmmoLookup = SystemAPI.GetComponentLookup<TurretAmmo>()
+      }.Schedule(state.Dependency);
     }
   }
 }

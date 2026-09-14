@@ -6,7 +6,8 @@ namespace Assets.Scripts.Entities.Skills
   public enum SkillType : byte
   {
     Dash,
-    Halt
+    Halt,
+    Reload
   }
 
   public enum SkillActivationType : byte
@@ -18,6 +19,7 @@ namespace Assets.Scripts.Entities.Skills
   public struct Skill : IBufferElementData
   {
     public SkillType Type;
+    public Entity TargetEntity;
     public SkillActivationType ActivationType;
     public int MaxUses;
     public int RemainingUses;
@@ -36,14 +38,13 @@ namespace Assets.Scripts.Entities.Skills
   {
     public SkillType Type;
     public float2 Direction;
+    public Entity TargetEntity;
 
-    public static void Trigger(DynamicBuffer<SkillTriggerEvent> triggerBuffer, SkillType type, float2 direction)
+    public static void Trigger(
+      DynamicBuffer<SkillTriggerEvent> triggerBuffer,
+      SkillTriggerEvent triggerEvent)
     {
-      triggerBuffer.Add(new SkillTriggerEvent
-      {
-        Type = type,
-        Direction = direction
-      });
+      triggerBuffer.Add(triggerEvent);
     }
   }
 }

@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using Unity.Entities;
 using System.Collections.Generic;
 using Assets.Scripts.Entities.Game;
+using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Player.Character;
 using Assets.Scripts.Entities.Player.Turret;
 using Assets.Scripts.Entities.Skills;
@@ -26,6 +27,10 @@ namespace Assets.Scripts.UI
     private VisualElement gameHud;
     private VisualElement turretHealthFill;
     private Label turretHealthLabel;
+    private Label turretAmmoLabel;
+    private Label turretTargetLabel;
+    private Label turretTargetHealthLabel;
+    private VisualElement turretTargetOutline;
     private VisualElement skillBar;
     private Label dashDirectionIndicator;
     private Label heldDirectionIndicator;
@@ -64,6 +69,10 @@ namespace Assets.Scripts.UI
       gameHud = root.Q<VisualElement>("game-hud");
       turretHealthFill = root.Q<VisualElement>("turret-health-fill");
       turretHealthLabel = root.Q<Label>("turret-health-label");
+      turretAmmoLabel = root.Q<Label>("turret-ammo-label");
+      turretTargetLabel = root.Q<Label>("turret-target-label");
+      turretTargetHealthLabel = root.Q<Label>("turret-target-health-label");
+      turretTargetOutline = root.Q<VisualElement>("turret-target-outline");
       skillBar = root.Q<VisualElement>("skill-bar");
       dashDirectionIndicator = root.Q<Label>("dash-direction-indicator");
       heldDirectionIndicator = root.Q<Label>("held-direction-indicator");
@@ -125,6 +134,10 @@ namespace Assets.Scripts.UI
         return;
 
       UpdateTurretHealth(world.EntityManager);
+      UpdateTurretAmmo(world.EntityManager);
+      UpdateTurretTarget(world.EntityManager);
+      UpdateTurretTargetHealth(world.EntityManager);
+      UpdateTurretTargetOutline(world.EntityManager);
       UpdateSkills(world.EntityManager);
     }
 
@@ -155,6 +168,107 @@ namespace Assets.Scripts.UI
           ? Mathf.Clamp01(health.CurrentHealth / health.MaxHealth) * 100f
           : 0f;
         turretHealthFill.style.width = Length.Percent(healthPercentage);
+      }
+
+      turretQuery.Dispose();
+    }
+
+    private void UpdateTurretTarget(EntityManager entityManager)
+    {
+      if (turretTargetLabel == null)
+        return;
+
+      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
+      if (turretQuery.IsEmptyIgnoreFilter)
+      {
+        turretTargetLabel.text = "NONE";
+      }
+      else
+      {
+        var turret = turretQuery.GetSingleton<TurretAttributes>();
+        turretTargetLabel.text = entityManager.Exists(turret.CurrentTarget)
+          && entityManager.HasComponent<SimpleEnemy>(turret.CurrentTarget)
+          ? entityManager.GetComponentData<SimpleEnemy>(turret.CurrentTarget).Type.ToString().ToUpperInvariant()
+          : "NONE";
+      }
+
+      turretQuery.Dispose();
+    }
+
+    private void UpdateTurretAmmo(EntityManager entityManager)
+    {
+      if (turretAmmoLabel == null)
+        return;
+
+      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAmmo>());
+      if (turretQuery.IsEmptyIgnoreFilter)
+      {
+        turretAmmoLabel.text = "-- / --";
+      }
+      else
+      {
+        var ammo = turretQuery.GetSingleton<TurretAmmo>();
+        turretAmmoLabel.text = $"{ammo.CurrentAmmo} / {ammo.MagazineSize}";
+      }
+
+      turretQuery.Dispose();
+    }
+
+    private void UpdateTurretTargetOutline(EntityManager entityManager)
+    {
+      if (turretTargetOutline == null || uiRoot == null)
+        return;
+
+      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
+      if (turretQuery.IsEmptyIgnoreFilter)
+      {
+        turretTargetOutline.style.display = DisplayStyle.None;
+        turretQuery.Dispose();
+        return;
+      }
+
+      var target = turretQuery.GetSingleton<TurretAttributes>().CurrentTarget;
+      turretQuery.Dispose();
+      if (!entityManager.Exists(target) || !entityManager.HasComponent<LocalTransform>(target))
+      {
+        turretTargetOutline.style.display = DisplayStyle.None;
+        return;
+      }
+
+      var camera = Camera.main;
+      var targetPosition = entityManager.GetComponentData<LocalTransform>(target).Position;
+      var targetScreenPosition = camera != null
+        ? camera.WorldToScreenPoint(new Vector3(targetPosition.x, targetPosition.y, targetPosition.z))
+        : Vector3.back;
+      if (targetScreenPosition.z < 0f || Screen.width == 0 || Screen.height == 0)
+      {
+        turretTargetOutline.style.display = DisplayStyle.None;
+        return;
+      }
+
+      const float outlineSize = 56f;
+      turretTargetOutline.style.left = Length.Pixels(targetScreenPosition.x / Screen.width * uiRoot.worldBound.width - outlineSize / 2f);
+      turretTargetOutline.style.top = Length.Pixels((1f - targetScreenPosition.y / Screen.height) * uiRoot.worldBound.height - outlineSize / 2f);
+      turretTargetOutline.style.display = DisplayStyle.Flex;
+    }
+
+    private void UpdateTurretTargetHealth(EntityManager entityManager)
+    {
+      if (turretTargetHealthLabel == null)
+        return;
+
+      var turretQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<TurretAttributes>());
+      if (turretQuery.IsEmptyIgnoreFilter)
+      {
+        turretTargetHealthLabel.text = "--";
+      }
+      else
+      {
+        var target = turretQuery.GetSingleton<TurretAttributes>().CurrentTarget;
+        turretTargetHealthLabel.text = entityManager.Exists(target)
+          && entityManager.HasComponent<SimpleEnemy>(target)
+          ? entityManager.GetComponentData<SimpleEnemy>(target).Health.ToString("0")
+          : "--";
       }
 
       turretQuery.Dispose();

@@ -94,6 +94,15 @@ namespace Assets.Scripts.Entities.Game
         EffectStrength = 0.05f,
         RechargeDuration = 0.1f
       });
+      skills.Add(new Skill
+      {
+        Type = SkillType.Reload,
+        ActivationType = SkillActivationType.Release,
+        MaxUses = 1,
+        RemainingUses = 1,
+        RechargeDuration = 1f,
+        ChargeDuration = 1f
+      });
       ecb.AddBuffer<SkillTriggerEvent>(player);
       ecb.AddComponent(player, new LevelEntity { Type = LevelEntityType.Player });
 
@@ -113,6 +122,11 @@ namespace Assets.Scripts.Entities.Game
       {
         MaxHealth = 100f,
         CurrentHealth = 100f
+      });
+      ecb.AddComponent(turretBaseInstance, new TurretAmmo
+      {
+        MagazineSize = 4,
+        CurrentAmmo = 4
       });
       ecb.AddBuffer<DamageEvent>(turretBaseInstance);
       ecb.AddComponent(turretBaseInstance, new LevelEntity { Type = LevelEntityType.Turret });

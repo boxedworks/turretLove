@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+    <Style src="project://database/Assets/UI%20Toolkit/GameUI.uss?fileID=7433441132597877224&amp;guid=11f23716eda1dfc49aae07857fa6dba1&amp;type=3#GameUI" />
+    <ui:VisualElement name="menu-screen" class="screen">
+        <ui:VisualElement class="menu-panel">
+            <ui:Label text="TURRET LOVE" class="kicker" />
+            <ui:Label text="MAIN MENU" class="title" />
+            <ui:Label text="DEFEND. ADAPT. SURVIVE." class="subtitle" />
+            <ui:Button name="play-button" text="PLAY" class="menu-button" />
+            <ui:Button name="options-button" text="OPTIONS" class="menu-button" />
+            <ui:Button name="exit-button" text="EXIT" class="menu-button exit-button" />
+            <ui:Label name="status-label" class="status" />
+        </ui:VisualElement>
+        <ui:Label text="SYSTEM ONLINE  //  BUILD 01" class="footer" />
+    </ui:VisualElement>
+    <ui:VisualElement name="game-hud" class="hud">
+        <ui:VisualElement class="turret-status">
+            <ui:Label text="TURRET // STATUS" class="turret-status-title" />
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="INTEGRITY" class="turret-stat-label" />
+                <ui:Label name="turret-health-label" text="-- / --" class="turret-stat-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="health-bar">
+                <ui:VisualElement name="turret-health-fill" class="health-bar-fill" />
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row turret-stat-row-spaced">
+                <ui:Label text="AMMO" class="turret-stat-label" />
+                <ui:Label name="turret-ammo-label" text="-- / --" class="turret-stat-value turret-ammo-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="TARGET" class="turret-stat-label" />
+                <ui:Label name="turret-target-label" text="NONE" class="turret-stat-value target-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="TARGET HP" class="turret-stat-label" />
+                <ui:Label name="turret-target-health-label" text="--" class="turret-stat-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="skill-bar-container">
+            <ui:VisualElement name="skill-bar" class="skill-bar" />
+        </ui:VisualElement>
+        <ui:VisualElement name="turret-target-outline" class="turret-target-outline" />
+        <ui:Label name="dash-direction-indicator" class="dash-direction-indicator" />
+        <ui:Label name="held-direction-indicator" class="held-direction-indicator" />
+    </ui:VisualElement>
+</ui:UXML>

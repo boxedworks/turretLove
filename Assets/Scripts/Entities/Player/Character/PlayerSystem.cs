@@ -33,8 +33,11 @@ namespace Assets.Scripts.Entities.Player.Character
 
       SkillTriggerEvent.Trigger(
         SystemAPI.GetBuffer<SkillTriggerEvent>(player),
-        SkillType.Dash,
-        input.ArrowReleaseDirection);
+        new SkillTriggerEvent
+        {
+          Type = SkillType.Dash,
+          Direction = input.ArrowReleaseDirection
+        });
     }
 
     private void TryTriggerHeldSkills(ref SystemState state, Entity player, InputState input)
@@ -48,7 +51,7 @@ namespace Assets.Scripts.Entities.Player.Character
       {
         var skill = skills[skillIndex];
         if (skill.ActivationType == SkillActivationType.Held)
-          SkillTriggerEvent.Trigger(triggerEvents, skill.Type, float2.zero);
+          SkillTriggerEvent.Trigger(triggerEvents, new SkillTriggerEvent { Type = skill.Type });
       }
     }
   }

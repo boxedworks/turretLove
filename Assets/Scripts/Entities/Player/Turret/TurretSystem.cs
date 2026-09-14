@@ -1,6 +1,5 @@
 
 using Assets.Scripts.Entities.Game.Audio;
-using Assets.Scripts.Input;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -12,6 +11,14 @@ namespace Assets.Scripts.Entities.Player.Turret
 
   public partial struct TurretSystem : ISystem
   {
+    private const float AimAlignmentTolerance = 0.01f;
+    private const float HalfScreenWidth = 8.5f;
+    private const float HalfScreenHeight = 4.5f;
+
+    public void OnCreate(ref SystemState state)
+    {
+      state.RequireForUpdate<TurretAttributes>();
+    }
 
     //
     [BurstCompile]
@@ -19,6 +26,7 @@ namespace Assets.Scripts.Entities.Player.Turret
     {
 
       public float3 TargetLookPosition;
+      public Entity TargetEntity;
       public double CurrentTime;
       public float DeltaTime;
       public NativeList<BulletSpawnEvent> BulletSpawnEvents;
@@ -26,35 +34,50 @@ namespace Assets.Scripts.Entities.Player.Turret
       public DynamicBuffer<AudioEvent> AudioEventBuffer;
       public ComponentLookup<LocalTransform> LocalTransformLookup;
 
-      public void Execute(ref TurretAttributes turretAttributes)
+      public void Execute(ref TurretAttributes turretAttributes, ref TurretAmmo turretAmmo)
       {
+        turretAttributes.CurrentTarget = TargetEntity;
+        if (TargetEntity == Entity.Null)
+          return;
+
         var turretTopTransform = LocalTransformLookup[turretAttributes.TurretTopEntity];
-        RotateTurret(ref turretAttributes, ref turretTopTransform);
-        HandleBullet(ref turretAttributes, turretTopTransform);
+        var isTargetAligned = RotateTurret(ref turretAttributes, ref turretTopTransform);
+        if (isTargetAligned)
+          HandleBullet(ref turretAttributes, ref turretAmmo, turretTopTransform);
+
         LocalTransformLookup[turretAttributes.TurretTopEntity] = turretTopTransform;
       }
 
-      readonly void RotateTurret(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
+      readonly bool RotateTurret(ref TurretAttributes turretAttributes, ref LocalTransform localTransform)
       {
         var directionToTarget = TargetLookPosition - localTransform.Position;
         var targetAngle = math.atan2(directionToTarget.y, directionToTarget.x) + math.radians(-90f);
         var currentAngle = 2f * math.atan2(localTransform.Rotation.value.z, localTransform.Rotation.value.w);
         var deltaAngle = math.atan2(math.sin(targetAngle - currentAngle), math.cos(targetAngle - currentAngle));
+        var angleToTarget = math.abs(deltaAngle);
 
-        if (math.abs(deltaAngle) < 0.01f)
+        if (angleToTarget < AimAlignmentTolerance)
+        {
           localTransform.Rotation = quaternion.RotateZ(targetAngle);
+          return true;
+        }
         else
         {
           var rotationSpeed = turretAttributes.RotationSpeed * DeltaTime;
           localTransform.Rotation = quaternion.RotateZ(currentAngle + math.clamp(deltaAngle, -rotationSpeed, rotationSpeed));
+          return angleToTarget - rotationSpeed < AimAlignmentTolerance;
         }
       }
 
-      readonly void HandleBullet(ref TurretAttributes turretAttributes, in LocalTransform localTransform)
+      readonly void HandleBullet(ref TurretAttributes turretAttributes, ref TurretAmmo turretAmmo, in LocalTransform localTransform)
       {
+        if (turretAmmo.CurrentAmmo <= 0)
+          return;
+
         if (CurrentTime - turretAttributes.TimeSinceLastShot < turretAttributes.FireRate)
           return;
         turretAttributes.TimeSinceLastShot = CurrentTime;
+        turretAmmo.CurrentAmmo--;
 
         BulletSpawnEvents.Add(new BulletSpawnEvent
         {
@@ -75,11 +98,18 @@ namespace Assets.Scripts.Entities.Player.Turret
 
       public NativeReference<float3> ClosestTargetPosition;
       public NativeReference<float> ClosestTargetDistance;
+      public NativeReference<Entity> ClosestTargetEntity;
 
       public float3 SourcePosition;
 
-      public void Execute(in TurretTargetable turretTargetable, in LocalTransform localTransform)
+      public void Execute(Entity entity, in TurretTargetable _, in LocalTransform localTransform)
       {
+        if (math.abs(localTransform.Position.x) > HalfScreenWidth
+          || math.abs(localTransform.Position.y) > HalfScreenHeight)
+        {
+          return;
+        }
+
         var directionToTarget = SourcePosition - localTransform.Position;
         var distanceToTarget = math.length(directionToTarget);
 
@@ -87,6 +117,7 @@ namespace Assets.Scripts.Entities.Player.Turret
         {
           ClosestTargetDistance.Value = distanceToTarget;
           ClosestTargetPosition.Value = localTransform.Position;
+          ClosestTargetEntity.Value = entity;
         }
       }
 
@@ -101,22 +132,40 @@ namespace Assets.Scripts.Entities.Player.Turret
       if (SystemAPI.HasSingleton<TurretDefeated>())
         return;
 
-      // Gather closest target
-      var closestTargetJob = new GatherClosestTargetJob
+      var turret = SystemAPI.GetSingleton<TurretAttributes>();
+      var targetEntity = turret.CurrentTarget;
+      float3 targetPosition;
+      if (targetEntity != Entity.Null
+        && state.EntityManager.Exists(targetEntity)
+        && state.EntityManager.HasComponent<LocalTransform>(targetEntity))
       {
-        SourcePosition = float3.zero, // Assuming the turret is at the origin for this example
-        ClosestTargetDistance = new NativeReference<float>(Allocator.TempJob) { Value = float.MaxValue },
-        ClosestTargetPosition = new NativeReference<float3>(Allocator.TempJob) { Value = float3.zero }
-      };
-      closestTargetJob.Run();
+        targetPosition = state.EntityManager.GetComponentData<LocalTransform>(targetEntity).Position;
+      }
+      else
+      {
+        var closestTargetJob = new GatherClosestTargetJob
+        {
+          SourcePosition = float3.zero, // Assuming the turret is at the origin for this example
+          ClosestTargetDistance = new NativeReference<float>(Allocator.TempJob) { Value = float.MaxValue },
+          ClosestTargetPosition = new NativeReference<float3>(Allocator.TempJob) { Value = float3.zero },
+          ClosestTargetEntity = new NativeReference<Entity>(Allocator.TempJob) { Value = Entity.Null }
+        };
+        closestTargetJob.Run();
+
+        targetEntity = closestTargetJob.ClosestTargetEntity.Value;
+        targetPosition = closestTargetJob.ClosestTargetPosition.Value;
+
+        closestTargetJob.ClosestTargetDistance.Dispose();
+        closestTargetJob.ClosestTargetPosition.Dispose();
+        closestTargetJob.ClosestTargetEntity.Dispose();
+      }
 
       // Update turret
-      var inputData = SystemAPI.GetSingleton<InputState>();
       var spawnEvents = new NativeList<BulletSpawnEvent>(Allocator.TempJob);
-
       new TurretUpdateJob
       {
-        TargetLookPosition = closestTargetJob.ClosestTargetPosition.Value,
+        TargetLookPosition = targetPosition,
+        TargetEntity = targetEntity,
         CurrentTime = SystemAPI.Time.ElapsedTime,
         DeltaTime = SystemAPI.Time.DeltaTime,
         BulletSpawnEvents = spawnEvents,
@@ -128,9 +177,6 @@ namespace Assets.Scripts.Entities.Player.Turret
       var buffer = SystemAPI.GetSingletonBuffer<BulletSpawnEvent>();
       foreach (var e in spawnEvents)
         buffer.Add(e);
-
-      closestTargetJob.ClosestTargetDistance.Dispose();
-      closestTargetJob.ClosestTargetPosition.Dispose();
 
       spawnEvents.Dispose();
     }
