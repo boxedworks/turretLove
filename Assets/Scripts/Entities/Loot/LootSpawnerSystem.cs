@@ -1,4 +1,3 @@
-
 using Assets.Scripts.Entities.Enemy;
 using Assets.Scripts.Entities.Game;
 using Assets.Scripts.Entities.Game.Scroll;
@@ -41,8 +40,8 @@ namespace Assets.Scripts.Entities.Loot
 
         foreach (var drop in drops)
         {
-          var dropType = drop.Key;
-          var dropAmount = drop.Value;
+          var dropType = drop.LootType;
+          var dropAmount = drop.Amount;
           var prefab = dropType switch
           {
             LootType.Mana => spawner.ManaPrefab,
@@ -52,6 +51,11 @@ namespace Assets.Scripts.Entities.Loot
             LootType.Sapphire => spawner.SapphirePrefab,
             LootType.Ruby => spawner.RubyPrefab,
             LootType.Diamond => spawner.DiamondPrefab,
+            LootType.Scrap => spawner.ManaPrefab,
+            LootType.Powder => spawner.ManaPrefab,
+            LootType.Catalyst => spawner.ManaPrefab,
+            LootType.Ember => spawner.ManaPrefab,
+            LootType.Toxin => spawner.ManaPrefab,
             _ => Entity.Null
           };
 

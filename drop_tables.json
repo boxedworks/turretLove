@@ -1,0 +1,94 @@
+{
+  "Goblin": {
+    "EnemyType": "Goblin",
+    "DropTables": [
+      {
+        "RollChance": 100.0,
+        "Entries": [
+          {
+            "Type": "Mana",
+            "DropChance": 80.0,
+            "MinAmount": 1,
+            "MaxAmount": 3
+          },
+          {
+            "Type": "Wood",
+            "DropChance": 50.0,
+            "MinAmount": 1,
+            "MaxAmount": 2
+          },
+          {
+            "Type": "Stone",
+            "DropChance": 50.0,
+            "MinAmount": 1,
+            "MaxAmount": 2
+          },
+          {
+            "Type": "Scrap",
+            "DropChance": 30.0,
+            "MinAmount": 1,
+            "MaxAmount": 2
+          },
+          {
+            "Type": "Powder",
+            "DropChance": 15.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          },
+          {
+            "Type": "Emerald",
+            "DropChance": 5.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          }
+        ]
+      }
+    ]
+  },
+  "Ghost": {
+    "EnemyType": "Ghost",
+    "DropTables": [
+      {
+        "RollChance": 200.0,
+        "Entries": [
+          {
+            "Type": "Mana",
+            "DropChance": 90.0,
+            "MinAmount": 2,
+            "MaxAmount": 5
+          },
+          {
+            "Type": "Sapphire",
+            "DropChance": 15.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          },
+          {
+            "Type": "Catalyst",
+            "DropChance": 20.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          },
+          {
+            "Type": "Ember",
+            "DropChance": 12.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          },
+          {
+            "Type": "Toxin",
+            "DropChance": 12.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          },
+          {
+            "Type": "Diamond",
+            "DropChance": 2.0,
+            "MinAmount": 1,
+            "MaxAmount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

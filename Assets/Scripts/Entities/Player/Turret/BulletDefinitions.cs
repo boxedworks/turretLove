@@ -31,6 +31,14 @@ namespace Assets.Scripts.Entities.Player.Turret
     OnFire
   }
 
+  public enum CraftingMaterialEffectKind : byte
+  {
+    AddRandomModifier,
+    RerollRandomModifier,
+    RemoveRandomModifier,
+    AddSpecificModifier
+  }
+
   [Serializable]
   public struct BulletRuntimeStats
   {
@@ -194,6 +202,14 @@ namespace Assets.Scripts.Entities.Player.Turret
     }
   }
 
+  public sealed class LootConversionRecipe
+    {
+      public string Id;
+      public string DisplayName;
+      public ResourceCost[] Input;
+      public ResourceCost[] Output;
+  }
+
   public sealed class BulletDefinition
   {
     public string Id;
@@ -204,6 +220,7 @@ namespace Assets.Scripts.Entities.Player.Turret
     public float ShotgunSpreadDegrees;
     public float BurstInterval;
     public ResourceCost[] CraftCost;
+    public ResourceCost[] CraftingCost;
   }
 
   public sealed class BulletModifierDefinition
@@ -216,103 +233,160 @@ namespace Assets.Scripts.Entities.Player.Turret
     public float MinimumValue;
     public float MaximumValue;
     public float EffectDuration;
-    public ResourceCost[] ApplyCost;
+  }
+
+  public sealed class CraftingMaterialEffectDefinition
+  {
+    public CraftingMaterialEffectKind Kind;
+    public int Count = 1;
+    public string ModifierId;
+  }
+
+  public sealed class CraftingMaterialDefinition
+  {
+    public LootType Resource;
+    public string DisplayName;
+    public string Description;
+    public CraftingMaterialEffectDefinition[] Effects;
   }
 
   // This is the editable gameplay catalog. Persistent saves only store these stable IDs and rolls.
   public static class BulletCatalog
   {
+    public static readonly LootConversionRecipe[] ConversionRecipes =
+    {
+      new() {
+        Id = "scrap-from-wood-stone", DisplayName = "Refine Scrap",
+        Input = new[] { new ResourceCost(LootType.Wood, 2), new ResourceCost(LootType.Stone, 1) },
+        Output = new[] { new ResourceCost(LootType.Scrap, 2) }
+      },
+      new() {
+        Id = "powder-from-mana", DisplayName = "Distill Powder",
+        Input = new[] { new ResourceCost(LootType.Mana, 3) },
+        Output = new[] { new ResourceCost(LootType.Powder, 2) }
+      },
+      new() {
+        Id = "catalyst-from-gems", DisplayName = "Refine Catalyst",
+        Input = new[] { new ResourceCost(LootType.Emerald, 1), new ResourceCost(LootType.Ruby, 1) },
+        Output = new[] { new ResourceCost(LootType.Catalyst, 1) }
+      },
+      new() {
+        Id = "ember-from-ruby", DisplayName = "Distill Ember",
+        Input = new[] { new ResourceCost(LootType.Ruby, 1), new ResourceCost(LootType.Mana, 1) },
+        Output = new[] { new ResourceCost(LootType.Ember, 1) }
+      },
+      new() {
+        Id = "toxin-from-emerald", DisplayName = "Distill Toxin",
+        Input = new[] { new ResourceCost(LootType.Emerald, 1), new ResourceCost(LootType.Mana, 1) },
+        Output = new[] { new ResourceCost(LootType.Toxin, 1) }
+      }
+    };
+
     public static readonly BulletDefinition[] Definitions =
     {
-      new BulletDefinition
-      {
+      new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0101",
         DisplayName = "Copper Slug",
         Description = "A dependable single high-velocity round.",
         Pattern = BulletFiringPattern.Single,
         BaseStats = new BulletRuntimeStats { Damage = 1.5f, Speed = 6f, Size = 0.25f, ProjectileCount = 1, BurstCount = 1, Knockback = 4f },
-        CraftCost = new[] { new ResourceCost(LootType.Wood, 3), new ResourceCost(LootType.Stone, 2) }
+        CraftingCost = new[] { new ResourceCost(LootType.Scrap, 3), new ResourceCost(LootType.Powder, 1) }
       },
-      new BulletDefinition
-      {
+      new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0102",
         DisplayName = "Ember Round",
         Description = "A single round that leaves enemies burning.",
         Pattern = BulletFiringPattern.Single,
         BaseStats = new BulletRuntimeStats { Damage = 1f, Speed = 5.5f, Size = 0.27f, ProjectileCount = 1, BurstCount = 1, Knockback = 3f, FireDamagePerSecond = 1f, FireDuration = 3f },
-        CraftCost = new[] { new ResourceCost(LootType.Mana, 3), new ResourceCost(LootType.Ruby, 1) }
+        CraftingCost = new[] { new ResourceCost(LootType.Powder, 3), new ResourceCost(LootType.Ember, 1) }
       },
-      new BulletDefinition
-      {
+      new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0103",
         DisplayName = "Scatter Shell",
         Description = "Three pellets spread across a cone.",
         Pattern = BulletFiringPattern.Shotgun,
         BaseStats = new BulletRuntimeStats { Damage = 0.8f, Speed = 5f, Size = 0.18f, ProjectileCount = 3, BurstCount = 1, Knockback = 2f },
         ShotgunSpreadDegrees = 24f,
-        CraftCost = new[] { new ResourceCost(LootType.Wood, 5), new ResourceCost(LootType.Stone, 3) }
+        CraftingCost = new[] { new ResourceCost(LootType.Scrap, 5), new ResourceCost(LootType.Powder, 2) }
       },
-      new BulletDefinition
-      {
+      new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0104",
         DisplayName = "Venom Burst",
         Description = "A timed three-shot burst that poisons its target.",
         Pattern = BulletFiringPattern.Burst,
         BaseStats = new BulletRuntimeStats { Damage = 0.7f, Speed = 5.5f, Size = 0.22f, ProjectileCount = 1, BurstCount = 3, Knockback = 2f, PoisonDamagePerSecond = 0.8f, PoisonDuration = 4f },
         BurstInterval = 0.16f,
-        CraftCost = new[] { new ResourceCost(LootType.Mana, 2), new ResourceCost(LootType.Emerald, 1) }
+        CraftingCost = new[] { new ResourceCost(LootType.Powder, 2), new ResourceCost(LootType.Toxin, 1) }
       }
     };
 
     public static readonly BulletModifierDefinition[] Modifiers =
     {
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90101", DisplayName = "Tempered Core", Description = "+1 to +3 damage, rolled when installed.",
-        Kind = BulletModifierKind.Damage, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 1f, MaximumValue = 3f,
-        ApplyCost = new[] { new ResourceCost(LootType.Stone, 3) }
+        Kind = BulletModifierKind.Damage, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 1f, MaximumValue = 3f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90102", DisplayName = "Overcharge", Description = "+15% to +45% speed, rolled every fire.",
-        Kind = BulletModifierKind.SpeedPercent, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 15f, MaximumValue = 45f,
-        ApplyCost = new[] { new ResourceCost(LootType.Mana, 2) }
+        Kind = BulletModifierKind.SpeedPercent, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 15f, MaximumValue = 45f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90103", DisplayName = "Expansion Chamber", Description = "+0.08 to +0.22 projectile size.",
-        Kind = BulletModifierKind.Size, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 0.08f, MaximumValue = 0.22f,
-        ApplyCost = new[] { new ResourceCost(LootType.Wood, 2), new ResourceCost(LootType.Stone, 1) }
+        Kind = BulletModifierKind.Size, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 0.08f, MaximumValue = 0.22f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90104", DisplayName = "Scatter Bore", Description = "+1 or +2 pellets for shotgun rounds.",
-        Kind = BulletModifierKind.ProjectileCount, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 1f, MaximumValue = 2f,
-        ApplyCost = new[] { new ResourceCost(LootType.Wood, 4) }
+        Kind = BulletModifierKind.ProjectileCount, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 1f, MaximumValue = 2f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90105", DisplayName = "Burst Capacitor", Description = "+1 or +2 timed burst shots, rolled every fire.",
-        Kind = BulletModifierKind.BurstCount, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 1f, MaximumValue = 2f,
-        ApplyCost = new[] { new ResourceCost(LootType.Mana, 3) }
+        Kind = BulletModifierKind.BurstCount, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 1f, MaximumValue = 2f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90106", DisplayName = "Impact Driver", Description = "+2 to +5 knockback.",
-        Kind = BulletModifierKind.Knockback, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 2f, MaximumValue = 5f,
-        ApplyCost = new[] { new ResourceCost(LootType.Stone, 2) }
+        Kind = BulletModifierKind.Knockback, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 2f, MaximumValue = 5f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90107", DisplayName = "Ignition Gel", Description = "+0.4 to +1.0 fire DPS for 3 seconds, rolled every fire.",
-        Kind = BulletModifierKind.FireDamageOverTime, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 0.4f, MaximumValue = 1f, EffectDuration = 3f,
-        ApplyCost = new[] { new ResourceCost(LootType.Ruby, 1), new ResourceCost(LootType.Mana, 2) }
+        Kind = BulletModifierKind.FireDamageOverTime, RollTiming = ModifierRollTiming.OnFire, MinimumValue = 0.4f, MaximumValue = 1f, EffectDuration = 3f
       },
-      new BulletModifierDefinition
-      {
+      new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90108", DisplayName = "Toxin Vial", Description = "+0.4 to +0.9 poison DPS for 4 seconds.",
-        Kind = BulletModifierKind.PoisonDamageOverTime, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 0.4f, MaximumValue = 0.9f, EffectDuration = 4f,
-        ApplyCost = new[] { new ResourceCost(LootType.Emerald, 1), new ResourceCost(LootType.Mana, 1) }
+        Kind = BulletModifierKind.PoisonDamageOverTime, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 0.4f, MaximumValue = 0.9f, EffectDuration = 4f
+      }
+    };
+
+    public static readonly CraftingMaterialDefinition[] CraftingMaterials =
+    {
+      new() {
+        Resource = LootType.Scrap, DisplayName = "Imbued Scrap",
+        Description = "Adds one random modifier that is not already on the bullet.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.AddRandomModifier } }
+      },
+      new() {
+        Resource = LootType.Powder, DisplayName = "Volatile Powder",
+        Description = "Rerolls the value of one random permanent modifier.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.RerollRandomModifier } }
+      },
+      new() {
+        Resource = LootType.Catalyst, DisplayName = "Dual Catalyst",
+        Description = "Adds two different random modifiers that are not already on the bullet.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.AddRandomModifier, Count = 2 } }
+      },
+      new() {
+        Resource = LootType.Ember, DisplayName = "Ignition Gel",
+        Description = "Adds the Ignition Gel modifier.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.AddSpecificModifier, ModifierId = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90107" } }
+      },
+      new() {
+        Resource = LootType.Toxin, DisplayName = "Toxin Vial",
+        Description = "Adds the Toxin Vial modifier.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.AddSpecificModifier, ModifierId = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90108" } }
+      },
+      new() {
+        Resource = LootType.Diamond, DisplayName = "Scouring Diamond",
+        Description = "Removes one random modifier from the bullet.",
+        Effects = new[] { new CraftingMaterialEffectDefinition { Kind = CraftingMaterialEffectKind.RemoveRandomModifier } }
       }
     };
 
@@ -329,6 +403,22 @@ namespace Assets.Scripts.Entities.Player.Turret
       for (var index = 0; index < Modifiers.Length; index++)
         if (Modifiers[index].Id == id)
           return Modifiers[index];
+      return null;
+    }
+
+    public static LootConversionRecipe FindConversionRecipe(string id)
+    {
+      for (var index = 0; index < ConversionRecipes.Length; index++)
+        if (ConversionRecipes[index].Id == id)
+          return ConversionRecipes[index];
+      return null;
+    }
+
+    public static CraftingMaterialDefinition FindCraftingMaterial(LootType resource)
+    {
+      for (var index = 0; index < CraftingMaterials.Length; index++)
+        if (CraftingMaterials[index].Resource == resource)
+          return CraftingMaterials[index];
       return null;
     }
   }

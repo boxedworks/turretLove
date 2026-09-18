@@ -10,6 +10,18 @@ namespace Assets.Scripts.Entities.Loot.DropTables
 {
   public partial struct DropTableSystem : ISystem
   {
+    public readonly struct DropResult
+    {
+      public readonly LootType LootType;
+      public readonly int Amount;
+
+      public DropResult(LootType lootType, int amount)
+      {
+        LootType = lootType;
+        Amount = amount;
+      }
+    }
+
     // Stored as a string-keyed dictionary for human-readable JSON
     private static readonly JsonSerializerSettings s_JsonSettings = new()
     {
@@ -42,9 +54,9 @@ namespace Assets.Scripts.Entities.Loot.DropTables
              ?? new Dictionary<EnemyType, EnemyDropTable>();
     }
 
-    public static Dictionary<LootType, int> RollDrops(EnemyType enemyType)
+    public static List<DropResult> RollDrops(EnemyType enemyType)
     {
-      var results = new Dictionary<LootType, int>();
+      var results = new List<DropResult>();
 
       if (!DropTables.TryGetValue(enemyType, out var enemyDropTable))
         return results;
@@ -59,7 +71,7 @@ namespace Assets.Scripts.Entities.Loot.DropTables
 
     private static void RollDropTable(
       DropTable dropTable,
-      Dictionary<LootType, int> results,
+      List<DropResult> results,
       System.Random rng)
     {
       var totalWeight = AddGuaranteedDrops(dropTable, results, rng);
@@ -74,7 +86,7 @@ namespace Assets.Scripts.Entities.Loot.DropTables
 
     private static float AddGuaranteedDrops(
       DropTable dropTable,
-      Dictionary<LootType, int> results,
+      List<DropResult> results,
       System.Random rng)
     {
       var totalWeight = 0f;
@@ -105,7 +117,7 @@ namespace Assets.Scripts.Entities.Loot.DropTables
     private static void RollWeightedDrop(
       DropEntry[] entries,
       float totalWeight,
-      Dictionary<LootType, int> results,
+      List<DropResult> results,
       System.Random rng)
     {
       var roll = rng.NextDouble() * totalWeight;
@@ -123,14 +135,23 @@ namespace Assets.Scripts.Entities.Loot.DropTables
     }
 
     private static void AddDrop(
-      Dictionary<LootType, int> results,
+      List<DropResult> results,
       DropEntry entry,
       System.Random rng)
     {
       var amount = rng.Next(entry.MinAmount, entry.MaxAmount + 1);
-      results[entry.Type] = results.TryGetValue(entry.Type, out var existing)
-        ? existing + amount
-        : amount;
+      if (entry.Type != LootType.None)
+      {
+        for (var index = 0; index < results.Count; index++)
+        {
+          if (results[index].LootType != entry.Type)
+            continue;
+          var existing = results[index];
+          results[index] = new DropResult(existing.LootType, existing.Amount + amount);
+          return;
+        }
+      }
+      results.Add(new DropResult(entry.Type, amount));
     }
   }
 }

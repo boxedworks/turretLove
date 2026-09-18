@@ -9,7 +9,6 @@
             <ui:VisualElement class="turret-stat-row"><ui:Label text="TARGET HP" class="turret-stat-label" /><ui:Label name="turret-target-health-label" text="--" class="turret-stat-value" /></ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="skill-bar-container"><ui:VisualElement name="skill-bar" class="skill-bar" /></ui:VisualElement>
-        <ui:Button name="workshop-open-button" text="WORKSHOP [B]" class="workshop-open-button" />
         <ui:VisualElement name="turret-target-outline" class="turret-target-outline" />
         <ui:Label name="dash-direction-indicator" class="dash-direction-indicator" />
         <ui:Label name="held-direction-indicator" class="held-direction-indicator" />

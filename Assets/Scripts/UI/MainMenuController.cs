@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Unity.Entities;
 using System.Collections.Generic;
@@ -25,10 +24,7 @@ namespace Assets.Scripts.UI
     private Button playButton;
     private Button optionsButton;
     private Button exitButton;
-    private Button workshopCloseButton;
-    private Button workshopOpenButton;
     private Button commandCenterBackButton;
-    private Button commandCenterWorkshopButton;
     private Button commandCenterStartButton;
     private VisualElement gameHud;
     private VisualElement turretHealthFill;
@@ -41,29 +37,24 @@ namespace Assets.Scripts.UI
     private Label dashDirectionIndicator;
     private Label heldDirectionIndicator;
     private VisualElement uiRoot;
-    private VisualElement workshopOverlay;
     private VisualElement commandCenterOverlay;
     private VisualElement saveSelectionOverlay;
     private VisualElement saveSlotList;
     private Label saveSelectionMessage;
     private Button saveSelectionBackButton;
-    private VisualElement workshopResourceList;
-    private VisualElement workshopRecipeList;
-    private VisualElement workshopBulletList;
-    private VisualElement workshopModifierList;
-    private VisualElement workshopEquipmentSlots;
-    private Label workshopBulletDetails;
-    private Label workshopStatus;
-    private Label workshopTitle;
-    private Label commandCenterSaveLabel;
     private Label commandCenterSelectionLabel;
-    private Label commandCenterMessage;
+    private Label commandCenterLogOutput;
+    private VisualElement commandPlayerInventoryList;
+    private VisualElement commandInventoryPreviewIcon;
+    private VisualElement commandInventoryPreviewDetails;
+    private VisualElement commandConversionList;
+    private VisualElement commandCraftingBenchSlot;
+    private VisualElement commandCraftingBenchDetails;
+    private VisualElement commandMagazineSlots;
     private bool isGameRunning;
     private BulletInventoryService subscribedInventory;
-    private readonly List<Button> commandLevelButtons = new();
     private SaveSelectionMenu saveSelectionMenu;
     private CommandCenterMenu commandCenterMenu;
-    private BulletWorkshopMenu workshopMenu;
     private GameHudController gameHudController;
 
     private void OnEnable()
@@ -94,10 +85,7 @@ namespace Assets.Scripts.UI
       playButton = root.Q<Button>("play-button");
       optionsButton = root.Q<Button>("options-button");
       exitButton = root.Q<Button>("exit-button");
-      workshopCloseButton = root.Q<Button>("workshop-close-button");
-      workshopOpenButton = root.Q<Button>("workshop-open-button");
       commandCenterBackButton = root.Q<Button>("command-center-back-button");
-      commandCenterWorkshopButton = root.Q<Button>("command-center-workshop-button");
       commandCenterStartButton = root.Q<Button>("command-center-start-button");
       gameHud = root.Q<VisualElement>("game-hud");
       turretHealthFill = root.Q<VisualElement>("turret-health-fill");
@@ -109,50 +97,46 @@ namespace Assets.Scripts.UI
       skillBar = root.Q<VisualElement>("skill-bar");
       dashDirectionIndicator = root.Q<Label>("dash-direction-indicator");
       heldDirectionIndicator = root.Q<Label>("held-direction-indicator");
-      workshopOverlay = root.Q<VisualElement>("workshop-overlay");
       commandCenterOverlay = root.Q<VisualElement>("command-center-overlay");
       saveSelectionOverlay = root.Q<VisualElement>("save-selection-overlay");
       saveSlotList = root.Q<VisualElement>("save-slot-list");
       saveSelectionMessage = root.Q<Label>("save-selection-message");
       saveSelectionBackButton = root.Q<Button>("save-selection-back-button");
-      workshopResourceList = root.Q<VisualElement>("workshop-resource-list");
-      workshopRecipeList = root.Q<VisualElement>("workshop-recipe-list");
-      workshopBulletList = root.Q<VisualElement>("workshop-bullet-list");
-      workshopModifierList = root.Q<VisualElement>("workshop-modifier-list");
-      workshopEquipmentSlots = root.Q<VisualElement>("workshop-equipment-slots");
-      workshopBulletDetails = root.Q<Label>("workshop-bullet-details");
-      workshopStatus = root.Q<Label>("workshop-status");
-      workshopTitle = root.Q<Label>(className: "workshop-title");
-      commandCenterSaveLabel = root.Q<Label>("command-center-save-label");
       commandCenterSelectionLabel = root.Q<Label>("command-center-selection-label");
-      commandCenterMessage = root.Q<Label>("command-center-message");
-      commandLevelButtons.Clear();
+      commandCenterLogOutput = root.Q<Label>("command-center-log-output");
+      commandPlayerInventoryList = root.Q<VisualElement>("command-player-inventory-list");
+      commandInventoryPreviewIcon = root.Q<VisualElement>("command-inventory-preview-icon");
+      commandInventoryPreviewDetails = root.Q<VisualElement>("command-inventory-preview-details");
+      commandConversionList = root.Q<VisualElement>("command-conversion-list");
+      commandCraftingBenchSlot = root.Q<VisualElement>("command-crafting-bench-slot");
+      commandCraftingBenchDetails = root.Q<VisualElement>("command-crafting-bench-details");
+      commandMagazineSlots = root.Q<VisualElement>("command-magazine-slots");
+      var commandAreaButtons = new List<Button>();
+      var commandLevelButtons = new List<Button>();
+      root.Query<Button>(className: "command-area-button").ToList(commandAreaButtons);
       root.Query<Button>(className: "command-level-button").ToList(commandLevelButtons);
 
       saveSelectionButton?.RegisterCallback<ClickEvent>(OnSaveSelectionClicked);
       playButton?.RegisterCallback<ClickEvent>(OnPlayClicked);
       optionsButton?.RegisterCallback<ClickEvent>(OnOptionsClicked);
       exitButton?.RegisterCallback<ClickEvent>(OnExitClicked);
-      workshopOpenButton?.RegisterCallback<ClickEvent>(OnWorkshopClicked);
       saveSelectionMenu = new SaveSelectionMenu(
         saveSelectionOverlay, saveSlotList, saveSelectionMessage, saveSelectionBackButton, UpdateMenuSaveStatus);
       commandCenterMenu = new CommandCenterMenu(
-        commandCenterOverlay, commandCenterSaveLabel, commandCenterSelectionLabel, commandCenterMessage,
-        commandCenterBackButton, commandCenterWorkshopButton, commandCenterStartButton, commandLevelButtons,
-        CloseCommandCenter, OpenWorkshopFromCommandCenter, StartSelectedLevel);
-      workshopMenu = new BulletWorkshopMenu(
-        workshopOverlay, workshopCloseButton, workshopResourceList, workshopRecipeList, workshopBulletList,
-        workshopModifierList, workshopEquipmentSlots, workshopBulletDetails, workshopStatus, workshopTitle,
-        CloseWorkshop);
+        commandCenterOverlay, commandCenterSelectionLabel, commandCenterLogOutput,
+        commandCenterBackButton, commandCenterStartButton, commandAreaButtons, commandLevelButtons,
+        commandPlayerInventoryList, commandInventoryPreviewIcon, commandInventoryPreviewDetails,
+        commandConversionList,
+        commandCraftingBenchSlot,
+        commandCraftingBenchDetails,
+        commandMagazineSlots, CloseCommandCenter, StartSelectedLevel);
       gameHudController = new GameHudController(
         gameHud, turretHealthFill, turretHealthLabel, turretAmmoLabel, turretTargetLabel, turretTargetHealthLabel,
         turretTargetOutline, skillBar, dashDirectionIndicator, heldDirectionIndicator, uiRoot);
       saveSelectionMenu.RegisterCallbacks();
       commandCenterMenu.RegisterCallbacks();
-      workshopMenu.RegisterCallbacks();
       SubscribeToInventory();
       SetGameUiVisibility();
-      workshopMenu.Hide();
       commandCenterMenu.Hide();
       saveSelectionMenu.Hide();
       UpdateMenuSaveStatus();
@@ -164,11 +148,8 @@ namespace Assets.Scripts.UI
       playButton?.UnregisterCallback<ClickEvent>(OnPlayClicked);
       optionsButton?.UnregisterCallback<ClickEvent>(OnOptionsClicked);
       exitButton?.UnregisterCallback<ClickEvent>(OnExitClicked);
-      workshopOpenButton?.UnregisterCallback<ClickEvent>(OnWorkshopClicked);
       saveSelectionMenu?.UnregisterCallbacks();
       commandCenterMenu?.UnregisterCallbacks();
-      workshopMenu?.UnregisterCallbacks();
-      commandLevelButtons.Clear();
       if (subscribedInventory != null)
         subscribedInventory.Changed -= OnInventoryChanged;
       subscribedInventory = null;
@@ -183,6 +164,8 @@ namespace Assets.Scripts.UI
       }
 
       commandCenterMenu.Show();
+      if (menuScreen != null)
+        menuScreen.style.display = DisplayStyle.None;
     }
 
     private void OnOptionsClicked(ClickEvent clickEvent)
@@ -197,17 +180,6 @@ namespace Assets.Scripts.UI
 #else
       Application.Quit();
 #endif
-    }
-
-    private void OnWorkshopClicked(ClickEvent clickEvent)
-    {
-      if (!BulletInventoryService.Instance.HasActiveSave)
-      {
-        saveSelectionMenu.Show("Select or create a save slot before opening the workshop.");
-        return;
-      }
-
-      workshopMenu.Show(isGameRunning);
     }
 
     private void StartSelectedLevel(int areaIndex, int levelIndex)
@@ -226,7 +198,6 @@ namespace Assets.Scripts.UI
 
       isGameRunning = true;
       commandCenterMenu.Hide();
-      workshopMenu.Hide();
       saveSelectionMenu.Hide();
       SetGameUiVisibility();
     }
@@ -263,16 +234,7 @@ namespace Assets.Scripts.UI
 
     private void Update()
     {
-      if (isGameRunning && Keyboard.current != null && Keyboard.current.bKey.wasPressedThisFrame)
-      {
-        if (workshopMenu.IsVisible)
-          workshopMenu.Hide();
-        else
-          workshopMenu.Show(true);
-      }
-      if (isGameRunning && workshopMenu.IsVisible
-        && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        workshopMenu.Hide();
+      commandCenterMenu?.Update();
 
       if (!isGameRunning)
         return;
@@ -287,22 +249,11 @@ namespace Assets.Scripts.UI
       gameHudController?.SetVisible(isGameRunning);
     }
 
-    private void CloseWorkshop()
-    {
-      workshopMenu.Hide();
-      if (!isGameRunning)
-        commandCenterMenu.Show();
-    }
-
     private void CloseCommandCenter()
     {
       commandCenterMenu.Hide();
-    }
-
-    private void OpenWorkshopFromCommandCenter()
-    {
-      commandCenterMenu.Hide();
-      workshopMenu.Show(false);
+      if (!isGameRunning && menuScreen != null)
+        menuScreen.style.display = DisplayStyle.Flex;
     }
 
     private void UpdateMenuSaveStatus()
@@ -334,8 +285,6 @@ namespace Assets.Scripts.UI
         saveSelectionMenu.Refresh();
       if (commandCenterMenu.IsVisible)
         commandCenterMenu.Refresh();
-      if (workshopMenu.IsVisible)
-        workshopMenu.Refresh();
     }
 
     private void OnDestroy()

@@ -17,7 +17,13 @@ namespace Assets.Scripts.Entities.Loot
     Emerald,
     Sapphire,
     Ruby,
-    Diamond
+    Diamond,
+
+    Scrap,
+    Powder,
+    Catalyst,
+    Ember,
+    Toxin
   }
 
   public struct LootData : IComponentData

@@ -49,9 +49,6 @@ namespace Assets.Scripts.Entities.Enemy
           }
           damageBuffer.Clear();
 
-          // Roll loot tables
-          LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
-
           // Death event
           if (simpleEnemy.Health <= 0f)
           {
@@ -60,7 +57,7 @@ namespace Assets.Scripts.Entities.Enemy
             // Add audio event for enemy death
             AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDestroy });
 
-            // Roll additional loot tables for death event
+            // Defeated enemies yield both collectible level loot and found bullet bases.
             LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
           }
 
