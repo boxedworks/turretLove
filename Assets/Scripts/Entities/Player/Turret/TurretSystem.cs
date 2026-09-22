@@ -81,12 +81,13 @@ namespace Assets.Scripts.Entities.Player.Turret
       {
         if (turretAmmo.CurrentAmmo <= 0 || magazine.Length == 0)
           return;
-        if (CurrentTime - turretAttributes.TimeSinceLastShot < turretAttributes.FireRate)
+        var slotIndex = math.clamp(turretAmmo.CurrentSlotIndex, 0, magazine.Length - 1);
+        var slot = magazine[slotIndex];
+        var fireInterval = slot.FireInterval > 0f ? slot.FireInterval : turretAttributes.FireRate;
+        if (CurrentTime - turretAttributes.TimeSinceLastShot < fireInterval)
           return;
 
         turretAttributes.TimeSinceLastShot = CurrentTime;
-        var slotIndex = math.clamp(turretAmmo.CurrentSlotIndex, 0, magazine.Length - 1);
-        var slot = magazine[slotIndex];
         turretAmmo.CurrentAmmo--;
         turretAmmo.CurrentSlotIndex = (slotIndex + 1) % magazine.Length;
 
@@ -122,16 +123,22 @@ namespace Assets.Scripts.Entities.Player.Turret
             for (var burstIndex = 0; burstIndex < burstCount; burstIndex++)
             {
               if (burstIndex == 0)
-                EmitImmediate(payload, localTransform.Position, localTransform.Rotation);
+                EmitBurst(payload, slot, localTransform.Position, localTransform.Rotation);
               else
               {
-                PendingBulletShots.Add(new PendingBulletShot
+                pelletCount = math.max(1, payload.Stats.ProjectileCount);
+                for (var pelletIndex = 0; pelletIndex < pelletCount; pelletIndex++)
                 {
-                  FireAtTime = CurrentTime + slot.BurstInterval * burstIndex,
-                  SpawnPosition = localTransform.Position,
-                  SpawnRotation = localTransform.Rotation,
-                  Payload = payload
-                });
+                  var ratio = pelletCount == 1 ? 0.5f : pelletIndex / (float)(pelletCount - 1);
+                  var angle = math.radians(math.lerp(-slot.ShotgunSpreadDegrees * 0.5f, slot.ShotgunSpreadDegrees * 0.5f, ratio));
+                  PendingBulletShots.Add(new PendingBulletShot
+                  {
+                    FireAtTime = CurrentTime + slot.BurstInterval * burstIndex,
+                    SpawnPosition = localTransform.Position,
+                    SpawnRotation = math.mul(localTransform.Rotation, quaternion.RotateZ(angle)),
+                    Payload = payload
+                  });
+                }
               }
             }
             break;
@@ -139,6 +146,21 @@ namespace Assets.Scripts.Entities.Player.Turret
           default:
             EmitImmediate(payload, localTransform.Position, localTransform.Rotation);
             break;
+        }
+      }
+
+      private void EmitBurst(
+        in BulletProjectilePayload payload,
+        in TurretMagazineSlot slot,
+        float3 position,
+        quaternion rotation)
+      {
+        var pelletCount = math.max(1, payload.Stats.ProjectileCount);
+        for (var pelletIndex = 0; pelletIndex < pelletCount; pelletIndex++)
+        {
+          var ratio = pelletCount == 1 ? 0.5f : pelletIndex / (float)(pelletCount - 1);
+          var angle = math.radians(math.lerp(-slot.ShotgunSpreadDegrees * 0.5f, slot.ShotgunSpreadDegrees * 0.5f, ratio));
+          EmitImmediate(payload, position, math.mul(rotation, quaternion.RotateZ(angle)));
         }
       }
 

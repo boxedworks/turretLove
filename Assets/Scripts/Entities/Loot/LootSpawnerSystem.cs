@@ -44,6 +44,7 @@ namespace Assets.Scripts.Entities.Loot
           var dropAmount = drop.Amount;
           var prefab = dropType switch
           {
+            LootType.BulletBase => spawner.ManaPrefab,
             LootType.Mana => spawner.ManaPrefab,
             LootType.Wood => spawner.WoodPrefab,
             LootType.Stone => spawner.StonePrefab,

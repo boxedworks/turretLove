@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Entities.Player.Turret;
 
 namespace Assets.Scripts.Bullets
 {
@@ -8,7 +9,12 @@ namespace Assets.Scripts.Bullets
   {
     public string Id;
     public string DefinitionId;
+    public int Level;
+    public bool HasRolledBaseStats;
+    public BulletRuntimeStats BaseStats;
+    public float ShotgunSpreadDegrees;
+    public float BurstInterval;
+    public float FireInterval;
     public List<CraftedBulletModifierSave> Modifiers = new();
-    public List<ItemSpendSave> SpentItems = new();
   }
 }

@@ -148,8 +148,8 @@ namespace Assets.Scripts.UI
       var inventory = BulletInventoryService.Instance;
       if (selectionLabel != null)
         selectionLabel.text = HasLevelSelection
-          ? $"SELECTED: AREA {selectedAreaIndex + 1} / LEVEL {selectedLevelIndex + 1}"
-          : "SELECT A LEVEL TO DEPLOY";
+          ? $"selected: area {selectedAreaIndex + 1} / level {selectedLevelIndex + 1}"
+          : "select a level to deploy";
       for (var index = 0; index < areaButtons.Count; index++)
         areaButtons[index].EnableInClassList("command-level-selected", index == selectedAreaIndex);
       for (var index = 0; index < levelButtons.Count; index++)
@@ -288,19 +288,13 @@ namespace Assets.Scripts.UI
       var details = GetCraftedBulletDetails(crafted);
       var card = CreateIconTile(
         iconClass,
-        $"{definition?.DisplayName ?? "Unknown bullet"}\n{definition?.Description}\nModifiers: {crafted.Modifiers.Count}\nDrag to a magazine slot or the crafting bench.",
-        crafted.Modifiers.Count.ToString());
+        $"{definition?.DisplayName ?? "Unknown bullet"}\nLevel {crafted.Level}\nModifiers: {crafted.Modifiers.Count}\nDrag to a magazine slot or the crafting bench.",
+        $"L{crafted.Level}");
       card.EnableInClassList("command-card-selected", crafted.Id == selectedCraftedBulletId);
       craftedBulletDropTargets.Add(card, crafted.Id);
       RegisterDragSource(card, iconClass, () => BeginBulletDrag(crafted.Id));
       RegisterBulletInventoryPreview(card, iconClass, crafted);
       card.RegisterCallback<ClickEvent>(_ => SelectCraftedBullet(crafted.Id));
-      var salvageButton = CreateActionButton(
-        "command-icon-salvage",
-        "Salvage this unequipped bullet.\nRefund: 50% of spent inventory items, rounded down.",
-        () => SalvageBullet(crafted.Id));
-      salvageButton.AddToClassList("command-salvage-button");
-      card.Add(salvageButton);
       return card;
     }
 
@@ -575,7 +569,7 @@ namespace Assets.Scripts.UI
       var definition = BulletCatalog.FindDefinition(bullet.DefinitionId);
       var benchBullet = CreateIconTile(
         $"command-icon-bullet-{definition?.Pattern.ToString().ToLowerInvariant() ?? "unknown"}",
-        $"Crafting Bench\n{GetCraftedBulletDetails(bullet)}\nDrag back to Player Inventory to remove it from the bench.");
+        $"Crafting Bench\n{GetCraftedBulletDetails(bullet)}");
       RegisterDragSource(benchBullet, $"command-icon-bullet-{definition?.Pattern.ToString().ToLowerInvariant() ?? "unknown"}", () => BeginBulletDrag(bullet.Id));
       craftingBenchSlot.Add(benchBullet);
       PopulateBulletDetails(craftingBenchDetails, inventory, bullet, null);
@@ -691,23 +685,11 @@ namespace Assets.Scripts.UI
       Refresh($"{type} selected.");
     }
 
-    private void SalvageBullet(string bulletId)
-    {
-      if (BulletInventoryService.Instance.TrySalvage(bulletId, out var error))
-      {
-        if (selectedCraftedBulletId == bulletId)
-          selectedCraftedBulletId = null;
-        Refresh("Salvaged bullet and recovered 50% of its spent inventory items.");
-      }
-      else
-        Refresh(error);
-    }
-
     private static string GetCraftedBulletDetails(CraftedBulletSave crafted)
     {
       var definition = BulletCatalog.FindDefinition(crafted.DefinitionId);
       var details = new StringBuilder(definition?.DisplayName ?? "UNKNOWN BULLET");
-      details.Append("\n").Append(definition?.Description);
+      details.Append("\nLevel: ").Append(crafted.Level);
       details.Append("\nModifiers: ").Append(crafted.Modifiers.Count);
       foreach (var savedModifier in crafted.Modifiers)
       {
@@ -740,22 +722,45 @@ namespace Assets.Scripts.UI
       }
 
       var definition = BulletCatalog.FindDefinition(bullet.DefinitionId);
-      detailsContainer.Add(CreateCraftingBenchDetail($"{definition?.DisplayName ?? "UNKNOWN BULLET"}\n{definition?.Description}", true));
+      detailsContainer.Add(CreateCraftingBenchDetail($"{definition?.DisplayName ?? "UNKNOWN BULLET"}\nLevel {bullet.Level}", true));
 
       var stats = slot.CraftedStats;
+      var minimumStats = default(BulletRuntimeStats);
+      var maximumStats = default(BulletRuntimeStats);
+      var minimumShotgunSpreadDegrees = 0f;
+      var maximumShotgunSpreadDegrees = 0f;
+      var minimumBurstInterval = 0f;
+      var maximumBurstInterval = 0f;
+      var minimumFireInterval = 0f;
+      var maximumFireInterval = 0f;
+      var hasStatRanges = showAttributeDefinitions && inventory.TryGetBulletBaseStatRanges(
+          bullet.Id,
+          out minimumStats,
+          out maximumStats,
+          out minimumShotgunSpreadDegrees,
+          out maximumShotgunSpreadDegrees,
+          out minimumBurstInterval,
+          out maximumBurstInterval,
+          out minimumFireInterval,
+          out maximumFireInterval);
       var infoTab = new VisualElement();
       infoTab.AddToClassList("command-crafting-bench-info-tab");
-      infoTab.Add(CreateCraftingBenchStat("Damage", stats.Damage.ToString("0.##")));
-      infoTab.Add(CreateCraftingBenchStat("Speed", stats.Speed.ToString("0.##")));
-      infoTab.Add(CreateCraftingBenchStat("Size", stats.Size.ToString("0.##")));
-      infoTab.Add(CreateCraftingBenchStat("Projectiles", stats.ProjectileCount.ToString()));
+      infoTab.Add(CreateCraftingBenchStat("Damage", FormatStatWithRange(stats.Damage, minimumStats.Damage, maximumStats.Damage, hasStatRanges)));
+      infoTab.Add(CreateCraftingBenchStat("Speed", FormatStatWithRange(stats.Speed, minimumStats.Speed, maximumStats.Speed, hasStatRanges)));
+      infoTab.Add(CreateCraftingBenchStat("Size", FormatStatWithRange(stats.Size, minimumStats.Size, maximumStats.Size, hasStatRanges)));
+      infoTab.Add(CreateCraftingBenchStat("Projectiles", FormatStatWithRange(stats.ProjectileCount, minimumStats.ProjectileCount, maximumStats.ProjectileCount, hasStatRanges)));
       if (slot.Pattern == BulletFiringPattern.Burst)
-        infoTab.Add(CreateCraftingBenchStat("Burst count", stats.BurstCount.ToString()));
-      infoTab.Add(CreateCraftingBenchStat("Knockback", stats.Knockback.ToString("0.##")));
+        infoTab.Add(CreateCraftingBenchStat("Burst count", FormatStatWithRange(stats.BurstCount, minimumStats.BurstCount, maximumStats.BurstCount, hasStatRanges)));
+      infoTab.Add(CreateCraftingBenchStat("Knockback", FormatStatWithRange(stats.Knockback, minimumStats.Knockback, maximumStats.Knockback, hasStatRanges)));
       if (stats.FireDamagePerSecond > 0f)
         infoTab.Add(CreateCraftingBenchStat("Fire", $"{stats.FireDamagePerSecond:0.##} DPS / {stats.FireDuration:0.##}s"));
       if (stats.PoisonDamagePerSecond > 0f)
         infoTab.Add(CreateCraftingBenchStat("Poison", $"{stats.PoisonDamagePerSecond:0.##} DPS / {stats.PoisonDuration:0.##}s"));
+      if (slot.Pattern == BulletFiringPattern.Shotgun)
+        infoTab.Add(CreateCraftingBenchStat("Spread", FormatStatWithRange(slot.ShotgunSpreadDegrees, minimumShotgunSpreadDegrees, maximumShotgunSpreadDegrees, hasStatRanges)));
+      if (slot.Pattern == BulletFiringPattern.Burst)
+        infoTab.Add(CreateCraftingBenchStat("Burst interval", FormatStatWithRange(slot.BurstInterval, minimumBurstInterval, maximumBurstInterval, hasStatRanges, "s")));
+      infoTab.Add(CreateCraftingBenchStat("Fire interval", FormatStatWithRange(slot.FireInterval, minimumFireInterval, maximumFireInterval, hasStatRanges, "s")));
       detailsContainer.Add(infoTab);
 
       if (bullet.Modifiers.Count > 0)
@@ -805,6 +810,12 @@ namespace Assets.Scripts.UI
       return kind is BulletModifierKind.ProjectileCount or BulletModifierKind.BurstCount
         ? Mathf.RoundToInt(value).ToString()
         : value.ToString("0.##");
+    }
+
+    private static string FormatStatWithRange(float value, float minimum, float maximum, bool showRange, string suffix = "")
+    {
+      var formattedValue = $"{value:0.##}{suffix}";
+      return showRange ? $"({minimum:0.##} - {maximum:0.##}{suffix}) {formattedValue}" : formattedValue;
     }
 
     private static VisualElement CreateCraftingBenchStat(string title, string value)

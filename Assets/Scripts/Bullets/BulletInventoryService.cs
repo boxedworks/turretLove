@@ -5,6 +5,7 @@ using Assets.Scripts.Entities.Loot;
 using Assets.Scripts.Entities.Player.Turret;
 using Unity.Collections;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace Assets.Scripts.Bullets
 {
@@ -13,9 +14,11 @@ namespace Assets.Scripts.Bullets
   /// </summary>
   public sealed partial class BulletInventoryService : MonoBehaviour
   {
-    public const int CurrentSaveVersion = 1;
+    public const int CurrentSaveVersion = 2;
     public const int EquippedSlotCount = 4;
     public const int SlotCount = 3;
+    public const int MinimumBulletLevel = 1;
+    public const int MaximumBulletLevel = 20;
 
     private const string SlotSaveFileNameFormat = "bullet_inventory_slot_{0}.json";
     private const string SettingsFileName = "bullet_inventory_settings.json";
@@ -139,7 +142,6 @@ namespace Assets.Scripts.Bullets
         return false;
 
       FindResource(resource).Amount--;
-      AddSpentItem(crafted.SpentItems, resource, 1);
       foreach (var effect in material.Effects)
         ApplyCraftingMaterialEffect(crafted, effect);
       return PersistAndNotify(true, out error);
@@ -345,23 +347,6 @@ namespace Assets.Scripts.Bullets
       return PersistAndNotify(true, out error);
     }
 
-    public bool TrySalvage(string craftedBulletId, out string error)
-    {
-      if (!EnsureActiveSave(out error))
-        return false;
-      var crafted = FindCraftedBullet(craftedBulletId);
-      if (crafted == null || data.EquippedBulletIds.Contains(craftedBulletId))
-      {
-        error = crafted == null ? "Select a valid crafted bullet." : "Unequip this bullet before salvaging it.";
-        return false;
-      }
-
-      foreach (var spend in crafted.SpentItems)
-        FindResource(spend.Type).Amount += spend.Amount / 2;
-      data.CraftedBullets.Remove(crafted);
-      return PersistAndNotify(true, out error);
-    }
-
     public bool TryEquip(int slotIndex, string craftedBulletId, out string error)
     {
       if (!EnsureActiveSave(out error))
@@ -412,6 +397,13 @@ namespace Assets.Scripts.Bullets
       if (!EnsureActiveSave(out error) || type == LootType.None || amount <= 0)
         return false;
 
+      if (type == LootType.BulletBase)
+      {
+        for (var index = 0; index < amount; index++)
+          data.CraftedBullets.Add(CreateBulletBase());
+        return PersistAndNotify(false, out error);
+      }
+
       var resource = FindResource(type);
       if (resource == null)
       {
@@ -437,9 +429,10 @@ namespace Assets.Scripts.Bullets
       {
         CraftedBulletId = new FixedString64Bytes(crafted.Id),
         Pattern = definition.Pattern,
-        CraftedStats = definition.BaseStats,
-        ShotgunSpreadDegrees = definition.ShotgunSpreadDegrees,
-        BurstInterval = definition.BurstInterval,
+        CraftedStats = crafted.BaseStats,
+        ShotgunSpreadDegrees = crafted.ShotgunSpreadDegrees,
+        BurstInterval = crafted.BurstInterval,
+        FireInterval = crafted.FireInterval,
         IsEquipped = 1
       };
 
@@ -456,6 +449,123 @@ namespace Assets.Scripts.Bullets
           BulletStatUtility.AddFireRange(ref slot.FireRolls, modifier.Kind, modifier.MinimumValue, modifier.MaximumValue, modifier.EffectDuration);
       }
       return true;
+    }
+
+    public bool TryGetBulletBaseStatRanges(
+      string craftedBulletId,
+      out BulletRuntimeStats minimumStats,
+      out BulletRuntimeStats maximumStats,
+      out float minimumShotgunSpreadDegrees,
+      out float maximumShotgunSpreadDegrees,
+      out float minimumBurstInterval,
+      out float maximumBurstInterval,
+      out float minimumFireInterval,
+      out float maximumFireInterval)
+    {
+      minimumStats = default;
+      maximumStats = default;
+      minimumShotgunSpreadDegrees = 0f;
+      maximumShotgunSpreadDegrees = 0f;
+      minimumBurstInterval = 0f;
+      maximumBurstInterval = 0f;
+      minimumFireInterval = 0f;
+      maximumFireInterval = 0f;
+
+      var crafted = FindCraftedBullet(craftedBulletId);
+      var definition = crafted == null ? null : BulletCatalog.FindDefinition(crafted.DefinitionId);
+      if (definition == null)
+        return false;
+
+      var normalizedLevel = (crafted.Level - MinimumBulletLevel) / (float)(MaximumBulletLevel - MinimumBulletLevel);
+      var multiplierRange = GetLevelMultiplierRange(definition, normalizedLevel);
+      minimumStats = ScaleStats(definition.BaseStats, multiplierRange.Minimum);
+      maximumStats = ScaleStats(definition.BaseStats, multiplierRange.Maximum);
+      minimumShotgunSpreadDegrees = ScaleInterval(definition.ShotgunSpreadDegrees, multiplierRange.Maximum);
+      maximumShotgunSpreadDegrees = ScaleInterval(definition.ShotgunSpreadDegrees, multiplierRange.Minimum);
+      minimumBurstInterval = ScaleInterval(definition.BurstInterval, multiplierRange.Maximum);
+      maximumBurstInterval = ScaleInterval(definition.BurstInterval, multiplierRange.Minimum);
+      minimumFireInterval = ScaleInterval(definition.FireInterval, multiplierRange.Maximum);
+      maximumFireInterval = ScaleInterval(definition.FireInterval, multiplierRange.Minimum);
+      return true;
+    }
+
+    internal static CraftedBulletSave CreateBulletBase(int? level = null, int? definitionIndex = null)
+    {
+      var definitions = BulletCatalog.Definitions;
+      var selectedDefinitionIndex = definitionIndex ?? UnityEngine.Random.Range(0, definitions.Length);
+      var definition = definitions[selectedDefinitionIndex];
+      var bulletLevel = Mathf.Clamp(level ?? UnityEngine.Random.Range(MinimumBulletLevel, MaximumBulletLevel + 1), MinimumBulletLevel, MaximumBulletLevel);
+      var normalizedLevel = (bulletLevel - MinimumBulletLevel) / (float)(MaximumBulletLevel - MinimumBulletLevel);
+      var multiplierRange = GetLevelMultiplierRange(definition, normalizedLevel);
+
+      return new CraftedBulletSave
+      {
+        Id = Guid.NewGuid().ToString(),
+        DefinitionId = definition.Id,
+        Level = bulletLevel,
+        HasRolledBaseStats = true,
+        BaseStats = ScaleStats(definition.BaseStats, multiplierRange),
+        ShotgunSpreadDegrees = ScaleInterval(definition.ShotgunSpreadDegrees, multiplierRange),
+        BurstInterval = ScaleInterval(definition.BurstInterval, multiplierRange),
+        FireInterval = ScaleInterval(definition.FireInterval, multiplierRange),
+        Modifiers = new List<CraftedBulletModifierSave>()
+      };
+    }
+
+    internal static void SetLegacyBaseStats(CraftedBulletSave bullet, BulletDefinition definition)
+    {
+      bullet.Level = MinimumBulletLevel;
+      bullet.HasRolledBaseStats = true;
+      bullet.BaseStats = definition.BaseStats;
+      bullet.ShotgunSpreadDegrees = definition.ShotgunSpreadDegrees;
+      bullet.BurstInterval = definition.BurstInterval;
+      bullet.FireInterval = definition.FireInterval;
+    }
+
+    private static BulletValueRange GetLevelMultiplierRange(BulletDefinition definition, float normalizedLevel)
+    {
+      return new BulletValueRange
+      {
+        Minimum = definition.LevelOneStatMultiplier.GetValue(normalizedLevel),
+        Maximum = definition.LevelTwentyStatMultiplier.GetValue(normalizedLevel)
+      };
+    }
+
+    private static BulletRuntimeStats ScaleStats(BulletRuntimeStats stats, BulletValueRange multiplierRange)
+    {
+      stats.Damage *= RollMultiplier(multiplierRange);
+      stats.Speed *= RollMultiplier(multiplierRange);
+      stats.Size *= RollMultiplier(multiplierRange);
+      stats.ProjectileCount = math.max(1, (int)math.round(stats.ProjectileCount * RollMultiplier(multiplierRange)));
+      stats.BurstCount = math.max(1, (int)math.round(stats.BurstCount * RollMultiplier(multiplierRange)));
+      stats.Knockback *= RollMultiplier(multiplierRange);
+      return stats;
+    }
+
+    private static BulletRuntimeStats ScaleStats(BulletRuntimeStats stats, float multiplier)
+    {
+      stats.Damage *= multiplier;
+      stats.Speed *= multiplier;
+      stats.Size *= multiplier;
+      stats.ProjectileCount = math.max(1, (int)math.round(stats.ProjectileCount * multiplier));
+      stats.BurstCount = math.max(1, (int)math.round(stats.BurstCount * multiplier));
+      stats.Knockback *= multiplier;
+      return stats;
+    }
+
+    private static float ScaleInterval(float interval, BulletValueRange multiplierRange)
+    {
+      return interval <= 0f ? 0f : interval / RollMultiplier(multiplierRange);
+    }
+
+    private static float ScaleInterval(float interval, float multiplier)
+    {
+      return interval <= 0f ? 0f : interval / multiplier;
+    }
+
+    private static float RollMultiplier(BulletValueRange multiplierRange)
+    {
+      return UnityEngine.Random.Range(multiplierRange.Minimum, multiplierRange.Maximum);
     }
 
     private bool EnsureActiveSave(out string error)
@@ -505,17 +615,6 @@ namespace Assets.Scripts.Bullets
         if (resources[index].Type == type)
           return resources[index];
       return null;
-    }
-
-    private static void AddSpentItem(List<ItemSpendSave> spends, LootType type, int amount)
-    {
-      if (type == LootType.None || amount <= 0)
-        return;
-      var existing = spends.Find(spend => spend.Type == type);
-      if (existing == null)
-        spends.Add(new ItemSpendSave { Type = type, Amount = amount });
-      else
-        existing.Amount += amount;
     }
 
   }

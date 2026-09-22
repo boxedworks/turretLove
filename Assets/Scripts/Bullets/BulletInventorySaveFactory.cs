@@ -17,13 +17,11 @@ namespace Assets.Scripts.Bullets
 
       for (var index = 0; index < BulletCatalog.Definitions.Length; index++)
       {
-        starter.CraftedBullets.Add(new CraftedBulletSave
-        {
-          Id = $"starter-{index + 1}-bullet",
-          DefinitionId = BulletCatalog.Definitions[index].Id,
-          Modifiers = new List<CraftedBulletModifierSave>(),
-          SpentItems = new List<ItemSpendSave>()
-        });
+        var starterBullet = BulletInventoryService.CreateBulletBase(
+          BulletInventoryService.MinimumBulletLevel,
+          index);
+        starterBullet.Id = $"starter-{index + 1}-bullet";
+        starter.CraftedBullets.Add(starterBullet);
         starter.EquippedBulletIds.Add($"starter-{index + 1}-bullet");
       }
       return starter;

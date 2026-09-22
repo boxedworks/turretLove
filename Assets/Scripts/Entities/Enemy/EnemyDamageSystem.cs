@@ -57,7 +57,7 @@ namespace Assets.Scripts.Entities.Enemy
             // Add audio event for enemy death
             AudioEventBuffer.Add(new AudioEvent { Type = AudioEvent.EventType.EnemyDestroy });
 
-            // Defeated enemies yield both collectible level loot and found bullet bases.
+            // Defeated enemies yield both collectible level loot
             LootSpawnerSystem.SpawnLoot(LootSpawnBuffer, new float3(transform.Position.x, transform.Position.y, 0f), simpleEnemy.Type);
           }
 

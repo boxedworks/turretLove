@@ -1,18 +1,19 @@
 :root {
-    --ink: rgb(235, 242, 239);
-    --muted-ink: rgb(151, 170, 164);
-    --panel: rgba(10, 24, 26, 0.94);
-    --panel-edge: rgb(49, 103, 95);
-    --accent: rgb(242, 174, 76);
-    --accent-dark: rgb(150, 91, 36);
-    --danger: rgb(220, 92, 78);
+    --background: rgb(69, 68, 79);
+    --border: rgb(69, 68, 79);
+    --surface: rgb(134, 129, 136);
+    --text: rgb(237, 225, 158);
+    --accent: rgb(180, 82, 82);
+    --danger: rgb(180, 82, 82);
+    --transparent: transparent;
+    -unity-font-definition: url("project://database/Assets/Fonts/basis33.ttf?fileID=12800000&guid=9e929f8d7cd8e834e8982c29d9fcb077&type=3#basis33");
 }
 
 .screen {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    background-color: rgb(8, 18, 22);
+    background-color: var(--background);
 }
 
 .menu-panel {
@@ -23,26 +24,19 @@
     padding-top: 42px;
     padding-bottom: 42px;
     align-items: center;
-    background-color: var(--panel);
+    background-color: var(--surface);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
-}
-
-.kicker {
-    color: var(--accent);
-    font-size: 13px;
-    letter-spacing: 3px;
-    margin-bottom: 12px;
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .title {
-    color: var(--ink);
+    color: var(--accent);
     font-size: 52px;
     -unity-font-style: bold;
     letter-spacing: 2px;
@@ -50,7 +44,7 @@
 }
 
 .subtitle {
-    color: var(--muted-ink);
+    color: var(--text);
     font-size: 15px;
     margin-bottom: 38px;
 }
@@ -59,23 +53,23 @@
     width: 300px;
     height: 54px;
     margin-bottom: 12px;
-    color: var(--ink);
-    background-color: rgba(28, 57, 57, 0.9);
+    color: var(--text);
+    background-color: var(--border);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
     font-size: 17px;
     -unity-font-style: bold;
 }
 
 .menu-button:hover,
 .menu-button:focus {
-    color: rgb(15, 27, 27);
+    color: var(--background);
     background-color: var(--accent);
     border-left-color: var(--accent);
     border-right-color: var(--accent);
@@ -84,7 +78,7 @@
 }
 
 .menu-button:active {
-    background-color: var(--accent-dark);
+    background-color: var(--accent);
 }
 
 .exit-button {
@@ -94,7 +88,7 @@
 
 .exit-button:hover,
 .exit-button:focus {
-    color: rgb(35, 13, 13);
+    color: var(--background);
     background-color: var(--danger);
     border-left-color: var(--danger);
     border-right-color: var(--danger);
@@ -105,7 +99,7 @@
 .status {
     min-height: 22px;
     margin-top: 22px;
-    color: var(--muted-ink);
+    color: var(--text);
     font-size: 13px;
     -unity-text-align: middle-center;
 }
@@ -113,7 +107,7 @@
 .footer {
     position: absolute;
     bottom: 18px;
-    color: rgb(92, 119, 112);
+    color: var(--border);
     font-size: 11px;
 }
 
@@ -126,7 +120,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    background-color: rgba(3, 11, 13, 0.82);
+    background-color: var(--background);
 }
 
 .save-selection-panel {
@@ -135,15 +129,15 @@
     padding-right: 32px;
     padding-top: 28px;
     padding-bottom: 24px;
-    background-color: var(--panel);
+    background-color: var(--surface);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .save-selection-title {
@@ -157,7 +151,7 @@
     min-height: 20px;
     margin-top: 8px;
     margin-bottom: 12px;
-    color: var(--muted-ink);
+    color: var(--border);
     font-size: 12px;
 }
 
@@ -173,15 +167,15 @@
     margin-bottom: 8px;
     padding-left: 12px;
     padding-right: 8px;
-    background-color: rgb(28, 57, 57);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .save-slot-active {
@@ -192,13 +186,13 @@
 }
 
 .save-slot-label {
-    color: var(--ink);
+    color: var(--text);
     font-size: 14px;
     -unity-font-style: bold;
 }
 
 .save-slot-state {
-    color: var(--muted-ink);
+    color: var(--border);
     font-size: 10px;
 }
 
@@ -211,17 +205,17 @@
 .save-selection-back-button {
     min-height: 30px;
     margin-left: 6px;
-    color: var(--ink);
-    background-color: rgba(10, 24, 26, 0.9);
+    font-size: 10px;
+    color: var(--text);
+    background-color: var(--border);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
-    font-size: 10px;
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .save-slot-delete {
@@ -233,7 +227,7 @@
 }
 
 .save-slot-confirm-delete {
-    color: rgb(35, 13, 13);
+    color: var(--background);
     background-color: var(--danger);
 }
 
@@ -251,7 +245,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    background-color: rgba(3, 11, 13, 0.82);
+    background-color: var(--background);
 }
 
 .command-center-panel {
@@ -263,15 +257,15 @@
     padding-right: 28px;
     padding-top: 22px;
     padding-bottom: 20px;
-    background-color: var(--panel);
+    background-color: var(--surface);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-center-header,
@@ -294,7 +288,7 @@
 
 .command-center-note,
 .command-log-output {
-    color: var(--muted-ink);
+    color: var(--text);
     font-size: 13px;
 }
 
@@ -312,7 +306,7 @@
     margin-right: 12px;
     padding-right: 12px;
     border-right-width: 1px;
-    border-right-color: var(--panel-edge);
+    border-right-color: var(--border);
 }
 
 .command-arsenal-column {
@@ -326,16 +320,16 @@
 .command-area-button,
 .command-level-button,
 .command-action-button {
-    color: var(--ink);
-    background-color: rgb(28, 57, 57);
+    color: var(--text);
+    background-color: var(--border);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
     font-size: 11px;
 }
 
@@ -344,7 +338,7 @@
 }
 
 .command-center-section-title {
-    color: var(--accent);
+    color: var(--text);
     margin-top: 9px;
     margin-bottom: 3px;
     font-size: 14px;
@@ -353,7 +347,7 @@
 }
 
 .command-center-selection-label {
-    color: var(--ink);
+    color: var(--text);
     font-size: 16px;
     -unity-font-style: bold;
 }
@@ -366,31 +360,31 @@
 .command-selection-field {
     margin-top: 4px;
     margin-bottom: 6px;
-    color: var(--ink);
+    color: var(--text);
     font-size: 11px;
 }
 
 .command-selection-field .unity-base-field__label {
     min-width: 44px;
-    color: var(--muted-ink);
+    color: var(--border);
     -unity-font-style: bold;
     letter-spacing: 1px;
 }
 
 .command-selection-field .unity-base-popup-field__text {
-    color: var(--ink);
+    color: var(--text);
 }
 
 .command-selection-field .unity-base-popup-field__input {
-    background-color: rgb(28, 57, 57);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-area-grid {
@@ -404,7 +398,7 @@
 }
 
 .command-area-title {
-    color: var(--muted-ink);
+    color: var(--border);
     margin-bottom: 5px;
     font-size: 12px;
     -unity-font-style: bold;
@@ -424,7 +418,7 @@
 .command-level-button:hover,
 .command-level-button:focus,
 .command-level-selected {
-    color: rgb(15, 27, 27);
+    color: var(--background);
     background-color: var(--accent);
     border-left-color: var(--accent);
     border-right-color: var(--accent);
@@ -435,7 +429,7 @@
 .command-start-button {
     height: 38px;
     margin-top: 2px;
-    color: rgb(15, 27, 27);
+    color: var(--background);
     background-color: var(--accent);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -450,12 +444,12 @@
 }
 
 .command-start-button:disabled {
-    color: var(--muted-ink);
-    background-color: rgb(28, 57, 57);
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    color: var(--border);
+    background-color: var(--surface);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-log-panel {
@@ -466,15 +460,15 @@
     padding-left: 8px;
     padding-right: 8px;
     padding-bottom: 8px;
-    background-color: rgba(3, 11, 13, 0.75);
+    background-color: var(--background);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-log-panel .command-center-section-title {
@@ -483,7 +477,7 @@
 
 .command-log-output {
     flex-grow: 1;
-    color: rgb(126, 208, 180);
+    color: var(--accent);
     font-size: 12px;
     white-space: normal;
 }
@@ -506,16 +500,16 @@
     padding-right: 16px;
     padding-top: 12px;
     padding-bottom: 12px;
-    background-color: var(--panel);
+    background-color: var(--surface);
     border-left-width: 2px;
-    border-left-color: var(--panel-edge);
+    border-left-color: var(--border);
     border-bottom-width: 1px;
-    border-bottom-color: var(--panel-edge);
+    border-bottom-color: var(--border);
 }
 
 .turret-status-title {
     color: var(--accent);
-    font-size: 14px;
+    font-size: 18px;
     -unity-font-style: bold;
     letter-spacing: 1px;
     margin-bottom: 8px;
@@ -533,13 +527,14 @@
 }
 
 .turret-stat-label {
-    color: var(--muted-ink);
+    color: var(--text);
     font-size: 12px;
     letter-spacing: 1px;
+    -unity-font-style: bold;
 }
 
 .turret-stat-value {
-    color: var(--ink);
+    color: var(--text);
     font-size: 14px;
     -unity-font-style: bold;
     -unity-text-align: middle-right;
@@ -548,15 +543,15 @@
 .health-bar {
     height: 10px;
     margin-top: 2px;
-    background-color: rgb(35, 50, 48);
+    background-color: var(--border);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .health-bar-fill {
@@ -566,11 +561,9 @@
 }
 
 .turret-ammo-value {
-    color: var(--accent);
 }
 
 .target-value {
-    color: var(--accent);
     font-size: 18px;
     -unity-font-style: bold;
 }
@@ -614,20 +607,20 @@
 .skill-icon {
     width: 100%;
     height: 100%;
-    background-color: rgb(28, 57, 57);
+    background-color: var(--surface);
     -unity-background-scale-mode: scale-and-crop;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .skill-uses {
-    color: var(--ink);
+    color: var(--text);
     font-size: 24px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -637,7 +630,7 @@
     top: 0;
     bottom: 0;
     -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(8, 18, 22);
+    -unity-text-outline-color: var(--background);
 }
 
 .skill-recharge-overlay {
@@ -658,7 +651,7 @@
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(8, 18, 22);
+    -unity-text-outline-color: var(--background);
 }
 
 .held-direction-indicator {
@@ -666,12 +659,12 @@
     width: 48px;
     height: 48px;
     display: none;
-    color: var(--muted-ink);
+    color: var(--border);
     font-size: 48px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(8, 18, 22);
+    -unity-text-outline-color: var(--background);
 }
 
 .command-resource-list,
@@ -694,15 +687,15 @@
     padding-left: 6px;
     padding-right: 2px;
     padding-bottom: 2px;
-    background-color: rgba(28, 57, 57, 0.3);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-inventory-panel .command-center-section-title {
@@ -719,9 +712,9 @@
     padding-right: 8px;
     padding-top: 8px;
     padding-bottom: 8px;
-    background-color: rgba(8, 18, 22, 0.55);
+    background-color: var(--background);
     border-top-width: 1px;
-    border-top-color: var(--panel-edge);
+    border-top-color: var(--border);
 }
 
 .command-inventory-preview-icon {
@@ -741,7 +734,7 @@
 
 .command-inventory-preview-details {
     flex-grow: 1;
-    color: var(--muted-ink);
+    color: var(--border);
     font-size: 13px;
     white-space: normal;
 }
@@ -765,21 +758,21 @@
     height: 46px;
     margin-right: 4px;
     margin-bottom: 4px;
-    background-color: rgb(28, 57, 57);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-item-icon {
     width: 100%;
     height: 100%;
-    background-color: rgb(48, 88, 82);
+    background-color: var(--border);
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -799,15 +792,15 @@
 }
 
 .command-icon-empty-slot {
-    background-color: rgb(16, 37, 39);
+    background-color: var(--background);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--muted-ink);
-    border-right-color: var(--muted-ink);
-    border-top-color: var(--muted-ink);
-    border-bottom-color: var(--muted-ink);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-item-badge {
@@ -815,8 +808,8 @@
     right: 2px;
     bottom: 1px;
     min-width: 14px;
-    color: var(--ink);
-    background-color: rgb(8, 18, 22);
+    color: var(--text);
+    background-color: var(--background);
     font-size: 10px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -830,8 +823,8 @@
     padding-right: 8px;
     padding-top: 6px;
     padding-bottom: 6px;
-    color: var(--ink);
-    background-color: rgba(3, 11, 13, 0.97);
+    color: var(--text);
+    background-color: var(--background);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -853,8 +846,8 @@
     padding-right: 1px;
     padding-top: 1px;
     padding-bottom: 1px;
-    color: var(--ink);
-    background-color: transparent;
+    color: var(--text);
+    background-color: var(--transparent);
     border-left-width: 0;
     border-right-width: 0;
     border-top-width: 0;
@@ -886,15 +879,15 @@
     padding-left: 8px;
     padding-right: 8px;
     padding-bottom: 8px;
-    background-color: rgba(8, 18, 22, 0.55);
+    background-color: var(--background);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
 }
 
 .command-crafting-bench .command-center-section-title {
@@ -905,7 +898,7 @@
     min-height: 62px;
     align-items: center;
     justify-content: center;
-    background-color: rgba(28, 57, 57, 0.45);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -928,7 +921,7 @@
     padding-right: 8px;
     padding-top: 6px;
     padding-bottom: 6px;
-    background-color: rgba(8, 18, 22, 0.55);
+    background-color: var(--background);
 }
 
 .command-crafting-bench-detail {
@@ -937,23 +930,23 @@
     padding-right: 8px;
     padding-top: 4px;
     padding-bottom: 4px;
-    color: var(--ink);
-    background-color: rgba(28, 57, 57, 0.75);
+    color: var(--text);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
     font-size: 12px;
     white-space: normal;
 }
 
 .command-crafting-bench-detail-header {
     color: var(--accent);
-    background-color: rgba(48, 88, 82, 0.75);
+    background-color: var(--border);
     -unity-font-style: bold;
 }
 
@@ -963,15 +956,15 @@
     padding-right: 8px;
     padding-top: 1px;
     padding-bottom: 1px;
-    background-color: rgba(28, 57, 57, 0.75);
+    background-color: var(--surface);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: var(--panel-edge);
-    border-right-color: var(--panel-edge);
-    border-top-color: var(--panel-edge);
-    border-bottom-color: var(--panel-edge);
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+    border-top-color: var(--border);
+    border-bottom-color: var(--border);
     font-size: 6px;
 }
 
@@ -979,7 +972,7 @@
     flex-direction: row;
     justify-content: space-between;
     min-height: 16px;
-    color: var(--ink);
+    color: var(--text);
     font-size: 12px;
 }
 
@@ -988,39 +981,13 @@
 }
 
 #command-crafting-bench-empty-details {
-    color: var(--muted-ink);
+    color: var(--border);
     font-size: 13px;
     white-space: normal;
 }
 
 .command-magazine-slot {
     margin-right: 6px;
-}
-
-.command-salvage-button {
-    width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    margin-left: 12px;
-    margin-right: 12px;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    background-color: transparent;
-}
-
-.command-salvage-button .command-icon-tile {
-    width: 20px;
-    height: 20px;
-    border-left-color: var(--danger);
-    border-right-color: var(--danger);
-    border-top-color: var(--danger);
-    border-bottom-color: var(--danger);
-}
-
-.command-icon-salvage {
-    background-color: var(--danger);
 }
 
 .command-card-list > .command-icon-tile:hover,
@@ -1034,7 +1001,7 @@
 .command-icon-bullet-single,
 .command-icon-bullet-shotgun,
 .command-icon-bullet-burst {
-    background-color: rgb(113, 135, 126);
+    background-color: var(--accent);
 }
 
 .command-icon-item-mana,
@@ -1050,24 +1017,20 @@
 .command-icon-item-ember,
 .command-icon-item-toxin,
 .command-icon-conversion {
-    background-color: rgb(73, 115, 106);
+    background-color: var(--surface);
 }
 
 .command-icon-item-ember,
 .command-icon-item-ruby {
-    background-color: rgb(139, 77, 59);
+    background-color: var(--danger);
 }
 
 .command-icon-item-toxin,
 .command-icon-item-emerald {
-    background-color: rgb(57, 125, 85);
+    background-color: var(--accent);
 }
 
 .command-icon-item-powder,
 .command-icon-item-mana {
-    background-color: rgb(67, 105, 145);
-}
-
-.command-salvage-button {
-    background-color: transparent;
+    background-color: var(--border);
 }

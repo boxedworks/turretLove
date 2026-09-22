@@ -54,6 +54,18 @@ namespace Assets.Scripts.Entities.Player.Turret
     public float PoisonDuration;
   }
 
+  [Serializable]
+  public struct BulletValueRange
+  {
+    public float Minimum;
+    public float Maximum;
+
+    public float GetValue(float normalizedLevel)
+    {
+      return math.lerp(Minimum, Maximum, normalizedLevel);
+    }
+  }
+
   public struct BulletStatRange
   {
     public float DamageMinimum;
@@ -89,6 +101,7 @@ namespace Assets.Scripts.Entities.Player.Turret
     public BulletStatRange FireRolls;
     public float ShotgunSpreadDegrees;
     public float BurstInterval;
+    public float FireInterval;
     public byte IsEquipped;
   }
 
@@ -203,24 +216,24 @@ namespace Assets.Scripts.Entities.Player.Turret
   }
 
   public sealed class LootConversionRecipe
-    {
-      public string Id;
-      public string DisplayName;
-      public ResourceCost[] Input;
-      public ResourceCost[] Output;
+  {
+    public string Id;
+    public string DisplayName;
+    public ResourceCost[] Input;
+    public ResourceCost[] Output;
   }
 
   public sealed class BulletDefinition
   {
     public string Id;
     public string DisplayName;
-    public string Description;
     public BulletFiringPattern Pattern;
     public BulletRuntimeStats BaseStats;
     public float ShotgunSpreadDegrees;
     public float BurstInterval;
-    public ResourceCost[] CraftCost;
-    public ResourceCost[] CraftingCost;
+    public float FireInterval;
+    public BulletValueRange LevelOneStatMultiplier = new() { Minimum = 0.8f, Maximum = 1f };
+    public BulletValueRange LevelTwentyStatMultiplier = new() { Minimum = 1f, Maximum = 2f };
   }
 
   public sealed class BulletModifierDefinition
@@ -275,48 +288,48 @@ namespace Assets.Scripts.Entities.Player.Turret
         Input = new[] { new ResourceCost(LootType.Ruby, 1), new ResourceCost(LootType.Mana, 1) },
         Output = new[] { new ResourceCost(LootType.Ember, 1) }
       },
-      new() {
-        Id = "toxin-from-emerald", DisplayName = "Distill Toxin",
-        Input = new[] { new ResourceCost(LootType.Emerald, 1), new ResourceCost(LootType.Mana, 1) },
-        Output = new[] { new ResourceCost(LootType.Toxin, 1) }
-      }
     };
 
     public static readonly BulletDefinition[] Definitions =
     {
       new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0101",
-        DisplayName = "Copper Slug",
-        Description = "A dependable single high-velocity round.",
+        DisplayName = "Sniper Shell",
         Pattern = BulletFiringPattern.Single,
-        BaseStats = new BulletRuntimeStats { Damage = 1.5f, Speed = 6f, Size = 0.25f, ProjectileCount = 1, BurstCount = 1, Knockback = 4f },
-        CraftingCost = new[] { new ResourceCost(LootType.Scrap, 3), new ResourceCost(LootType.Powder, 1) }
+        BaseStats = new BulletRuntimeStats { Damage = 4f, Speed = 8f, Size = 0.2f, ProjectileCount = 1, BurstCount = 1, Knockback = 6f },
+        FireInterval = 1f,
       },
       new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0102",
-        DisplayName = "Ember Round",
-        Description = "A single round that leaves enemies burning.",
+        DisplayName = "Pistol Round",
         Pattern = BulletFiringPattern.Single,
-        BaseStats = new BulletRuntimeStats { Damage = 1f, Speed = 5.5f, Size = 0.27f, ProjectileCount = 1, BurstCount = 1, Knockback = 3f, FireDamagePerSecond = 1f, FireDuration = 3f },
-        CraftingCost = new[] { new ResourceCost(LootType.Powder, 3), new ResourceCost(LootType.Ember, 1) }
+        BaseStats = new BulletRuntimeStats { Damage = 2f, Speed = 6f, Size = 0.22f, ProjectileCount = 1, BurstCount = 1, Knockback = 3f },
+        FireInterval = 0.5f,
       },
       new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0103",
-        DisplayName = "Scatter Shell",
-        Description = "Three pellets spread across a cone.",
-        Pattern = BulletFiringPattern.Shotgun,
-        BaseStats = new BulletRuntimeStats { Damage = 0.8f, Speed = 5f, Size = 0.18f, ProjectileCount = 3, BurstCount = 1, Knockback = 2f },
-        ShotgunSpreadDegrees = 24f,
-        CraftingCost = new[] { new ResourceCost(LootType.Scrap, 5), new ResourceCost(LootType.Powder, 2) }
+        DisplayName = "SMG Burst",
+        Pattern = BulletFiringPattern.Burst,
+        BaseStats = new BulletRuntimeStats { Damage = 0.25f, Speed = 7f, Size = 0.12f, ProjectileCount = 1, BurstCount = 8, Knockback = 3f },
+        BurstInterval = 0.05f,
+        FireInterval = 0.5f,
       },
       new() {
         Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0104",
-        DisplayName = "Venom Burst",
-        Description = "A timed three-shot burst that poisons its target.",
+        DisplayName = "Shotgun Shell",
+        Pattern = BulletFiringPattern.Shotgun,
+        BaseStats = new BulletRuntimeStats { Damage = 1f, Speed = 5.5f, Size = 0.16f, ProjectileCount = 4, BurstCount = 1, Knockback = 3f },
+        ShotgunSpreadDegrees = 28f,
+        FireInterval = 1f,
+      },
+      new() {
+        Id = "a163b61e-7df7-48c2-9a64-04bf4d7b0105",
+        DisplayName = "Burst Shotgun Shell",
         Pattern = BulletFiringPattern.Burst,
-        BaseStats = new BulletRuntimeStats { Damage = 0.7f, Speed = 5.5f, Size = 0.22f, ProjectileCount = 1, BurstCount = 3, Knockback = 2f, PoisonDamagePerSecond = 0.8f, PoisonDuration = 4f },
-        BurstInterval = 0.16f,
-        CraftingCost = new[] { new ResourceCost(LootType.Powder, 2), new ResourceCost(LootType.Toxin, 1) }
+        BaseStats = new BulletRuntimeStats { Damage = 1f / 6f, Speed = 5.5f, Size = 0.12f, ProjectileCount = 4, BurstCount = 3, Knockback = 1.5f },
+        ShotgunSpreadDegrees = 28f,
+        BurstInterval = 0.1f,
+        FireInterval = 0.5f,
       }
     };
 
@@ -353,7 +366,7 @@ namespace Assets.Scripts.Entities.Player.Turret
       new() {
         Id = "bd0fa4d4-c6d7-47cb-a50a-048dc6a90108", DisplayName = "Toxin Vial", Description = "+0.4 to +0.9 poison DPS for 4 seconds.",
         Kind = BulletModifierKind.PoisonDamageOverTime, RollTiming = ModifierRollTiming.OnCrafting, MinimumValue = 0.4f, MaximumValue = 0.9f, EffectDuration = 4f
-      }
+      },
     };
 
     public static readonly CraftingMaterialDefinition[] CraftingMaterials =

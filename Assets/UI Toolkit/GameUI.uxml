@@ -1,73 +1,88 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI%20Toolkit/GameUI.uss?fileID=7433441132597879392&amp;guid=11f23716eda1dfc49aae07857fa6dba1&amp;type=3#GameUI"/>
-    <ui:VisualElement name="menu-screen" class="screen" style="display: none;">
-        <ui:VisualElement class="menu-panel">
-            <ui:Label text="TURRET LOVE" class="kicker"/>
-            <ui:Label text="MAIN MENU" class="title"/>
-            <ui:Label text="DEFEND. ADAPT. SURVIVE." class="subtitle"/>
-            <ui:Button name="play-button" text="PLAY" class="menu-button"/>
-            <ui:Button name="save-selection-button" text="SAVE SELECTION" class="menu-button"/>
-            <ui:Button name="options-button" text="OPTIONS" class="menu-button"/>
-            <ui:Button name="exit-button" text="EXIT" class="menu-button exit-button"/>
-            <ui:Label name="status-label" class="status"/>
-        </ui:VisualElement>
-        <ui:Label text="SYSTEM ONLINE  //  BUILD 01" class="footer"/>
-    </ui:VisualElement>
-    <ui:VisualElement name="save-selection-overlay" class="save-selection-overlay">
+    <ui:VisualElement name="save-selection-overlay" class="save-selection-overlay" style="display: none;">
         <ui:VisualElement class="save-selection-panel">
-            <ui:Label text="SAVE SELECTION" class="save-selection-title"/>
+            <ui:Label text="saves" class="save-selection-title"/>
             <ui:Label name="save-selection-message" class="save-selection-message"/>
             <ui:VisualElement name="save-slot-list" class="save-slot-list"/>
-            <ui:Button name="save-selection-back-button" text="BACK" class="save-selection-back-button"/>
+            <ui:Button name="save-selection-back-button" text="back" class="save-selection-back-button"/>
         </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="game-hud" class="hud" style="display: none;">
+        <ui:VisualElement class="turret-status">
+            <ui:Label text="turret" class="turret-status-title"/>
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="life" class="turret-stat-label"/>
+                <ui:Label name="turret-health-label" text="-- / --" class="turret-stat-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="health-bar">
+                <ui:VisualElement name="turret-health-fill" class="health-bar-fill"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row turret-stat-row-spaced">
+                <ui:Label text="ammo" class="turret-stat-label"/>
+                <ui:Label name="turret-ammo-label" text="-- / --" class="turret-stat-value turret-ammo-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="target" class="turret-stat-label"/>
+                <ui:Label name="turret-target-label" text="none" class="turret-stat-value target-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="turret-stat-row">
+                <ui:Label text="target life" class="turret-stat-label"/>
+                <ui:Label name="turret-target-health-label" text="--" class="turret-stat-value"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="skill-bar-container">
+            <ui:VisualElement name="skill-bar" class="skill-bar"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="turret-target-outline" class="turret-target-outline"/>
+        <ui:Label name="dash-direction-indicator" class="dash-direction-indicator"/>
+        <ui:Label name="held-direction-indicator" class="held-direction-indicator"/>
     </ui:VisualElement>
     <ui:VisualElement name="command-center-overlay" class="command-center-overlay" style="display: flex;">
         <ui:VisualElement class="command-center-panel">
             <ui:VisualElement class="command-center-header">
                 <ui:VisualElement>
-                    <ui:Label text="COMMAND CENTER" class="command-center-title"/>
+                    <ui:Label text="journey menu" class="command-center-title"/>
                 </ui:VisualElement>
                 <ui:Button name="command-center-back-button" text="BACK" class="command-center-back-button"/>
             </ui:VisualElement>
             <ui:VisualElement class="command-center-dashboard" style="align-items: flex-start; align-content: stretch;">
                 <ui:VisualElement class="command-dashboard-column command-mission-column">
-                    <ui:Label text="MISSION SELECTION" class="command-center-section-title"/>
+                    <ui:Label text="area select" class="command-center-section-title"/>
                     <ui:Label name="command-center-selection-label" class="command-center-selection-label"/>
-                    <ui:Label text="All areas currently use the same combat environment." class="command-center-note"/>
-                    <ui:Label text="AREA" class="command-area-title"/>
+                    <ui:Label text="information..." class="command-center-note"/>
                     <ui:VisualElement name="command-area-buttons" class="command-level-row">
-                        <ui:Button text="AREA 1" class="command-area-button"/>
-                        <ui:Button text="AREA 2" class="command-area-button"/>
-                        <ui:Button text="AREA 3" class="command-area-button"/>
-                        <ui:Button text="AREA 4" class="command-area-button"/>
+                        <ui:Button text="plains" class="command-area-button"/>
+                        <ui:Button text="forest" class="command-area-button"/>
+                        <ui:Button text="mines" class="command-area-button"/>
+                        <ui:Button text="graves" class="command-area-button"/>
                     </ui:VisualElement>
-                    <ui:Label text="LEVEL" class="command-area-title"/>
+                    <ui:Label text="level" class="command-center-section-title"/>
                     <ui:VisualElement name="command-level-buttons" class="command-level-row">
-                        <ui:Button text="LEVEL 1" class="command-level-button"/>
-                        <ui:Button text="LEVEL 2" class="command-level-button"/>
-                        <ui:Button text="LEVEL 3" class="command-level-button"/>
+                        <ui:Button text="1" class="command-level-button"/>
+                        <ui:Button text="2" class="command-level-button"/>
+                        <ui:Button text="3" class="command-level-button"/>
                     </ui:VisualElement>
-                    <ui:Button name="command-center-start-button" text="START SELECTED LEVEL" class="command-start-button"/>
+                    <ui:Button name="command-center-start-button" text="start selected level" class="command-start-button"/>
                     <ui:VisualElement class="command-log-panel">
-                        <ui:Label text="LOG" class="command-center-section-title"/>
+                        <ui:Label text="log" class="command-center-section-title"/>
                         <ui:Label name="command-center-log-output" class="command-log-output"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement class="command-dashboard-column command-economy-column">
-                    <ui:Label text="REFINE INVENTORY" class="command-center-section-title"/>
+                    <ui:Label text="crafting" class="command-center-section-title"/>
                     <ui:VisualElement name="command-conversion-list" class="command-card-list"/>
-                    <ui:Label text="ORDERED MAGAZINE" class="command-center-section-title"/>
+                    <ui:Label text="magazine" class="command-center-section-title"/>
                     <ui:VisualElement name="command-magazine-slots" class="command-card-list"/>
-                    <ui:Label text="Salvage unequipped bullets for 50% of their crafting spend." class="command-center-note"/>
                     <ui:VisualElement class="command-crafting-bench">
-                        <ui:Label text="CRAFTING BENCH" class="command-center-section-title"/>
+                        <ui:Label text="bench" class="command-center-section-title"/>
                         <ui:VisualElement name="command-crafting-bench-slot" class="command-crafting-bench-slot"/>
-                        <ui:VisualElement name="command-crafting-bench-details" class="command-crafting-bench-details"/>
+                        <ui:VisualElement name="command-crafting-bench-details" class="command-crafting-bench-details" style="height: auto; min-height: auto;"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement class="command-dashboard-column command-arsenal-column">
                     <ui:VisualElement class="command-inventory-panel">
-                        <ui:Label text="PLAYER INVENTORY" class="command-center-section-title"/>
+                        <ui:Label text="inventory" class="command-center-section-title"/>
                         <ui:VisualElement name="command-player-inventory-list" class="command-inventory-grid"/>
                         <ui:VisualElement class="command-inventory-preview">
                             <ui:VisualElement name="command-inventory-preview-icon" class="command-inventory-preview-icon command-item-icon" style="height: 75px; width: 75px;"/>
@@ -80,34 +95,15 @@
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
-    <ui:VisualElement name="game-hud" class="hud">
-        <ui:VisualElement class="turret-status">
-            <ui:Label text="TURRET // STATUS" class="turret-status-title"/>
-            <ui:VisualElement class="turret-stat-row">
-                <ui:Label text="INTEGRITY" class="turret-stat-label"/>
-                <ui:Label name="turret-health-label" text="-- / --" class="turret-stat-value"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="health-bar">
-                <ui:VisualElement name="turret-health-fill" class="health-bar-fill"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="turret-stat-row turret-stat-row-spaced">
-                <ui:Label text="AMMO" class="turret-stat-label"/>
-                <ui:Label name="turret-ammo-label" text="-- / --" class="turret-stat-value turret-ammo-value"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="turret-stat-row">
-                <ui:Label text="TARGET" class="turret-stat-label"/>
-                <ui:Label name="turret-target-label" text="NONE" class="turret-stat-value target-value"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="turret-stat-row">
-                <ui:Label text="TARGET HP" class="turret-stat-label"/>
-                <ui:Label name="turret-target-health-label" text="--" class="turret-stat-value"/>
-            </ui:VisualElement>
+    <ui:VisualElement name="menu-screen" class="screen" style="display: none;">
+        <ui:VisualElement class="menu-panel">
+            <ui:Label text="i &lt;3 my turret" class="title" style="font-size: 40px; padding-bottom: 40px;"/>
+            <ui:Button name="play-button" text="play" class="menu-button"/>
+            <ui:Button name="save-selection-button" text="saves" class="menu-button"/>
+            <ui:Button name="options-button" text="options" class="menu-button"/>
+            <ui:Button name="exit-button" text="exit" class="menu-button exit-button"/>
+            <ui:Label name="status-label" class="status"/>
         </ui:VisualElement>
-        <ui:VisualElement class="skill-bar-container">
-            <ui:VisualElement name="skill-bar" class="skill-bar"/>
-        </ui:VisualElement>
-        <ui:VisualElement name="turret-target-outline" class="turret-target-outline"/>
-        <ui:Label name="dash-direction-indicator" class="dash-direction-indicator"/>
-        <ui:Label name="held-direction-indicator" class="held-direction-indicator"/>
+        <ui:Label text="SYSTEM ONLINE  //  BUILD 01" class="footer"/>
     </ui:VisualElement>
 </ui:UXML>

@@ -14,12 +14,13 @@ namespace Assets.Scripts.Bullets
       save.Resources ??= new List<ResourceAmountSave>();
       save.CraftedBullets ??= new List<CraftedBulletSave>();
       save.EquippedBulletIds ??= new List<string>();
-      if (save.Version != BulletInventoryService.CurrentSaveVersion)
+      if (save.Version > BulletInventoryService.CurrentSaveVersion)
         throw new InvalidDataException($"Save version {save.Version} is unsupported.");
 
       ValidateResources(save.Resources);
       ValidateCraftedBullets(save.CraftedBullets);
       ValidateEquippedBullets(save.EquippedBulletIds, save.CraftedBullets);
+      save.Version = BulletInventoryService.CurrentSaveVersion;
     }
 
     private static void ValidateResources(List<ResourceAmountSave> resources)
@@ -52,9 +53,11 @@ namespace Assets.Scripts.Bullets
           craftedBullets.RemoveAt(index);
           continue;
         }
-
+        var bulletDefinition = BulletCatalog.FindDefinition(crafted.DefinitionId);
+        crafted.Level = Mathf.Clamp(crafted.Level, BulletInventoryService.MinimumBulletLevel, BulletInventoryService.MaximumBulletLevel);
+        if (!crafted.HasRolledBaseStats)
+          BulletInventoryService.SetLegacyBaseStats(crafted, bulletDefinition);
         crafted.Modifiers ??= new List<CraftedBulletModifierSave>();
-        crafted.SpentItems ??= new List<ItemSpendSave>();
         var installed = new HashSet<string>();
         for (var modifierIndex = crafted.Modifiers.Count - 1; modifierIndex >= 0; modifierIndex--)
         {

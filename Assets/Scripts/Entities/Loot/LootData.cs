@@ -9,6 +9,8 @@ namespace Assets.Scripts.Entities.Loot
   {
     None,
 
+    BulletBase,
+
     Mana,
 
     Wood,

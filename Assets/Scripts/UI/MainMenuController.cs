@@ -170,7 +170,6 @@ namespace Assets.Scripts.UI
 
     private void OnOptionsClicked(ClickEvent clickEvent)
     {
-      statusLabel.text = "Options will be available soon.";
     }
 
     private void OnExitClicked(ClickEvent clickEvent)
@@ -263,8 +262,8 @@ namespace Assets.Scripts.UI
 
       var inventory = BulletInventoryService.Instance;
       statusLabel.text = inventory.HasActiveSave
-        ? $"ACTIVE SAVE: SLOT {inventory.ActiveSlotIndex + 1}"
-        : "SELECT A SAVE SLOT TO PLAY.";
+        ? $"active save: slot {inventory.ActiveSlotIndex + 1}"
+        : "select a save slot to play";
     }
 
     private void SubscribeToInventory()
